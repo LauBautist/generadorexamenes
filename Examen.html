@@ -307,65 +307,72 @@
 
 
         document.getElementById('preguntaForm').addEventListener('submit', async function (event) {
-            event.preventDefault();
+    event.preventDefault();
 
-            const pregunta = document.getElementById('pregunta').value;
-            const respuestas = document.querySelectorAll('#respuestasContainer .respuesta');
-            let opcionesTexto = '';
-            let respuestaCorrecta = '';
-            const opciones = [];
+    // Verificar si hay incisos agregados
+    const respuestas = document.querySelectorAll('#respuestasContainer .respuesta');
+    if (respuestas.length === 0) {
+        alert('Por favor, agregue al menos un inciso antes de guardar la pregunta.');
+        return;
+    }
 
-            respuestas.forEach((respuesta, index) => {
-                const letra = String.fromCharCode(65 + index);
-                const texto = respuesta.querySelector('input[type="text"]').value;
-                opcionesTexto += `${letra}: ${texto}<br>`;
-                opciones.push({ letra: letra, texto: texto });
+    const pregunta = document.getElementById('pregunta').value;
+    let opcionesTexto = '';
+    let respuestaCorrecta = '';
+    const opciones = [];
 
-                const radio = respuesta.querySelector('input[type="radio"]');
-                if (radio.checked) {
-                    respuestaCorrecta = letra;
-                }
-            });
+    respuestas.forEach((respuesta, index) => {
+        const letra = String.fromCharCode(65 + index);
+        const texto = respuesta.querySelector('input[type="text"]').value;
+        opcionesTexto += `${letra}: ${texto}<br>`;
+        opciones.push({ letra: letra, texto: texto });
 
-            const tablaPreguntas = document.getElementById('tablaPreguntas');
-            const nuevaFila = document.createElement('tr');
-            nuevaFila.innerHTML = `
-                <td>${tablaPreguntas.rows.length + 1}</td>
-                <td>${pregunta}</td>
-                <td>${opcionesTexto}</td>
-                <td>${respuestaCorrecta}</td>
-            `;
+        const radio = respuesta.querySelector('input[type="radio"]');
+        if (radio.checked) {
+            respuestaCorrecta = letra;
+        }
+    });
 
-            tablaPreguntas.appendChild(nuevaFila);
+    const tablaPreguntas = document.getElementById('tablaPreguntas');
+    const nuevaFila = document.createElement('tr');
+    nuevaFila.innerHTML = `
+        <td>${tablaPreguntas.rows.length + 1}</td>
+        <td>${pregunta}</td>
+        <td>${opcionesTexto}</td>
+        <td>${respuestaCorrecta}</td>
+    `;
 
-            // Guardar la pregunta en la colección 'preguntas' en Firebase
-            try {
-                const user = auth.currentUser;
-                if (!user) {
-                    alert('Debes iniciar sesión para guardar la pregunta.');
-                    return;
-                }
+    tablaPreguntas.appendChild(nuevaFila);
 
-                await setDoc(doc(db, 'preguntas', `${claveExamen}-${tablaPreguntas.rows.length}`), {
-                    claveExamen: claveExamen,
-                    duracionExamen: document.getElementById('duracionExamen').value,
-                    fechaExamen: document.getElementById('fechaExamen').value,
-                    horaExamen: document.getElementById('horaExamen').value,
-                    nombreExamen: document.getElementById('nombreExamen').value,
-                    opciones: opciones.reduce((acc, curr) => ({ ...acc, [curr.letra]: curr.texto }), {}),
-                    pregunta: pregunta,
-                    respuestaCorrecta: respuestaCorrecta,
-                    userId: user.uid, // Guardar el UID del usuario
-                    classId: classId // Guardar el ID de la clase
-                });
-                console.log('Pregunta guardada en la base de datos');
-            } catch (error) {
-                console.error('Error al guardar la pregunta: ', error);
-            }
+    // Guardar la pregunta en la colección 'preguntas' en Firebase
+    try {
+        const user = auth.currentUser;
+        if (!user) {
+            alert('Debes iniciar sesión para guardar la pregunta.');
+            return;
+        }
 
-            document.getElementById('preguntaForm').reset();
-            document.getElementById('respuestasContainer').innerHTML = '';
+        await setDoc(doc(db, 'preguntas', `${claveExamen}-${tablaPreguntas.rows.length}`), {
+            claveExamen: claveExamen,
+            duracionExamen: document.getElementById('duracionExamen').value,
+            fechaExamen: document.getElementById('fechaExamen').value,
+            horaExamen: document.getElementById('horaExamen').value,
+            nombreExamen: document.getElementById('nombreExamen').value,
+            opciones: opciones.reduce((acc, curr) => ({ ...acc, [curr.letra]: curr.texto }), {}),
+            pregunta: pregunta,
+            respuestaCorrecta: respuestaCorrecta,
+            userId: user.uid, // Guardar el UID del usuario
+            classId: classId // Guardar el ID de la clase
         });
+        console.log('Pregunta guardada en la base de datos');
+    } catch (error) {
+        console.error('Error al guardar la pregunta: ', error);
+    }
+
+    document.getElementById('preguntaForm').reset();
+    document.getElementById('respuestasContainer').innerHTML = '';
+});
+
 
         document.getElementById('guardarExamen').addEventListener('click', async function () {
             const nombreExamen = document.getElementById('nombreExamen').value;
