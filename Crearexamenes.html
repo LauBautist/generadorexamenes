@@ -180,6 +180,7 @@
         <table class="table">
             <thead>
                 <tr>
+                    <th>Clave del examen</th>
                     <th>Nombre del Examen</th>
                     <th>Fecha</th>
                     <th>Hora</th>
@@ -245,60 +246,65 @@
         });
 
         async function cargarExamenes(userId) {
-            const examTableBody = document.getElementById('examTableBody');
-            examTableBody.innerHTML = '';
+    const examTableBody = document.getElementById('examTableBody');
+    examTableBody.innerHTML = '';
 
-            const classId = new URLSearchParams(window.location.search).get('classId');
+    const classId = new URLSearchParams(window.location.search).get('classId');
 
-            if (!classId) {
-                alert('No se ha especificado la clase. Por favor, regrese y seleccione una clase.');
-                return;
-            }
+    if (!classId) {
+        alert('No se ha especificado la clase. Por favor, regrese y seleccione una clase.');
+        return;
+    }
 
-            const examQuery = query(
-                collection(db, "examenes"),
-                where("userId", "==", userId),
-                where("classId", "==", classId)
-            );
+    const examQuery = query(
+        collection(db, "examenes"),
+        where("userId", "==", userId),
+        where("classId", "==", classId)
+    );
 
-            const querySnapshot = await getDocs(examQuery);
+    const querySnapshot = await getDocs(examQuery);
 
-            const clavesExamenes = new Set();
+    const clavesExamenes = new Set();
 
-            querySnapshot.forEach((docSnap) => {
-                const examen = docSnap.data();
-                if (!clavesExamenes.has(examen.claveExamen)) {
-                    clavesExamenes.add(examen.claveExamen);
+    querySnapshot.forEach((docSnap) => {
+        const examen = docSnap.data();
+        if (!clavesExamenes.has(examen.claveExamen)) {
+            clavesExamenes.add(examen.claveExamen);
 
-                    const row = examTableBody.insertRow();
-                    row.insertCell(0).innerText = examen.nombreExamen;
-                    row.insertCell(1).innerText = examen.fechaExamen;
-                    row.insertCell(2).innerText = examen.horaExamen;
-                    row.insertCell(3).innerText = examen.duracionExamen;
+            const row = examTableBody.insertRow();
 
-                    const opcionesCell = row.insertCell(4);
+            // Nueva celda para la clave del examen
+            row.insertCell(0).innerText = examen.claveExamen;
 
-                    const mostrarExamenButton = document.createElement('button');
-                    mostrarExamenButton.className = 'mostrar-examen-btn';
-                    mostrarExamenButton.innerText = 'Mostrar Examen';
-                    mostrarExamenButton.onclick = () => mostrarExamen(examen.claveExamen);
-                    opcionesCell.appendChild(mostrarExamenButton);
+            row.insertCell(1).innerText = examen.nombreExamen;
+            row.insertCell(2).innerText = examen.fechaExamen;
+            row.insertCell(3).innerText = examen.horaExamen;
+            row.insertCell(4).innerText = examen.duracionExamen;
 
-                    const eliminarExamenButton = document.createElement('button');
-                    eliminarExamenButton.className = 'eliminar-examen-btn';
-                    eliminarExamenButton.innerText = 'Eliminar Examen';
-                    eliminarExamenButton.onclick = () => eliminarExamen(examen.claveExamen);
-                    opcionesCell.appendChild(eliminarExamenButton);
+            const opcionesCell = row.insertCell(5);
 
-                    // Botón para generar PDF
-                    const pdfButton = document.createElement('button');
-                    pdfButton.className = 'mostrar-examen-btn';
-                    pdfButton.innerText = 'PDF';
-                    pdfButton.onclick = () => generarPDF(examen.claveExamen);
-                    opcionesCell.appendChild(pdfButton);
-                }
-            });
+            const mostrarExamenButton = document.createElement('button');
+            mostrarExamenButton.className = 'mostrar-examen-btn';
+            mostrarExamenButton.innerText = 'Mostrar Examen';
+            mostrarExamenButton.onclick = () => mostrarExamen(examen.claveExamen);
+            opcionesCell.appendChild(mostrarExamenButton);
+
+            const eliminarExamenButton = document.createElement('button');
+            eliminarExamenButton.className = 'eliminar-examen-btn';
+            eliminarExamenButton.innerText = 'Eliminar Examen';
+            eliminarExamenButton.onclick = () => eliminarExamen(examen.claveExamen);
+            opcionesCell.appendChild(eliminarExamenButton);
+
+            // Botón para generar PDF
+            const pdfButton = document.createElement('button');
+            pdfButton.className = 'mostrar-examen-btn';
+            pdfButton.innerText = 'PDF';
+            pdfButton.onclick = () => generarPDF(examen.claveExamen);
+            opcionesCell.appendChild(pdfButton);
         }
+    });
+}
+
 
         async function mostrarExamen(claveExamen) {
             const preguntasContainer = document.getElementById('preguntasContainer');
