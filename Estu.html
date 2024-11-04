@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Exámenes</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+   
+   <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #95b8d1;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .nav {
+            background-color: #ec7aad;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            margin-right: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #d6156c;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .tabla-examenes {
+            margin-top: 20px;
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        .tabla-examenes th,
+        .tabla-examenes td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+
+        .tabla-examenes th {
+            background-color: #eac4d5;
+            color: white;
+        }
+
+        .examen-button {
+            background-color: #b8e0d2;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .examen-button:hover {
+            background-color: #95b8d1;
+        }
+
+        #errorMensaje {
+            color: red;
+            display: none;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        #preguntasContainer {
+            display: none;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            width: 100%;
+            max-width: 800px;
+        }
+
+        #preguntasContainer h2 {
+            color: #6a0dad;
+        }
+
+        #timer {
+            font-size: 20px;
+            color: #6a0dad;
+            margin-top: 10px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 10% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="nav">
+        <span>Lista de Exámenes</span>
+        <div>
+            <a href="graficasEstudiantes.html">Grafica</a>
+            <a href="#"onclick="generarConstancia()">Constancia</a>
+            <a href="index.html">Cerrar Sesión</a>
+        </div>
+    </div>
+    <h1>Lista de Exámenes</h1>
+    <div class="container">
+        <input type="text" id="claveInput" placeholder="Ingrese la clave de acceso" />
+        <button id="claveButton" class="examen-button">Buscar</button>
+        <div id="errorMensaje">Clave incorrecta. Intente nuevamente.</div>
+
+        <table class="tabla-examenes" id="examenesContainer">
+            <thead>
+                <tr>
+                    <th>Nombre del Examen</th>
+                    <th>Fecha</th>
+                    <th>Hora</th>
+                    <th>Duración (min)</th>
+                    <th>Acceso</th>
+                    <th>Resultados</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Los exámenes se agregarán dinámicamente aquí -->
+            </tbody>
+        </table>
+    </div>
+
+    <div id="preguntasContainer">
+        <h2>Examen: <span id="nombreExamen"></span></h2>
+        <div id="timer">Tiempo restante: <span id="tiempoRestante"></span></div>
+        <form id="examenForm">
+            <div id="preguntas"></div>
+            <button type="button" id="guardarButton" class="examen-button"
+                onclick="guardarRespuestas()">Guardar</button>
+        </form>
+    </div>
+
+    <div id="resultadosModal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="closeResultadosModal">&times;</span>
+            <h2>Resultados del Examen</h2>
+            <p id="resultadoTexto"></p>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
+        import { getFirestore, collection, getDocs, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "API_KEY",
+            authDomain: "cuentas-ddcbc.firebaseapp.com",
+            projectId: "cuentas-ddcbc",
+            storageBucket: "cuentas-ddcbc.appspot.com",
+            messagingSenderId: "416491681259",
+            appId: "1:41697ff964d1acede8d5ae"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let totalPreguntas = 0;
+        let timerInterval;
+        let examenIniciado = false;
+
+        async function buscarExamenesPorClave(clave) {
+            const examenesContainer = document.querySelector('#examenesContainer tbody');
+            examenesContainer.innerHTML = '';  // Limpiar tabla de exámenes
+            document.getElementById('preguntasContainer').style.display = 'none';
+
+            try {
+                const querySnapshot = await getDocs(collection(db, "preguntas"));
+                const examenesMap = {};
+
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    if (data.claveExamen === clave) {
+                        if (!examenesMap[data.nombreExamen]) {
+                            examenesMap[data.nombreExamen] = {
+                                nombreExamen: data.nombreExamen,
+                                fecha: data.fechaExamen,
+                                hora: data.horaExamen,
+                                duracion: data.duracionExamen,
+                                claveExamen: clave
+                            };
+                        }
+                    }
+                });
+
+                if (Object.keys(examenesMap).length === 0) {
+                    document.getElementById('errorMensaje').style.display = 'block';
+                } else {
+                    document.getElementById('errorMensaje').style.display = 'none';
+                    Object.values(examenesMap).forEach(data => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${data.nombreExamen}</td>
+                            <td>${data.fecha}</td>
+                            <td>${data.hora}</td>
+                            <td>${data.duracion}</td>
+                            <td><button class="examen-button" onclick="mostrarPreguntas('${data.nombreExamen}', '${data.claveExamen}', ${data.duracion})">Comenzar</button></td>
+                            <td><button class="examen-button" onclick="verResultados('${data.nombreExamen}', '${data.claveExamen}')">Resultados</button></td>
+                        `;
+                        examenesContainer.appendChild(row);
+                    });
+                }
+            } catch (error) {
+                console.error("Error al buscar los exámenes: ", error);
+                document.getElementById('errorMensaje').innerText = 'Error al buscar los exámenes. Por favor, inténtelo nuevamente.';
+                document.getElementById('errorMensaje').style.display = 'block';
+            }
+        }
+
+        async function mostrarPreguntas(examenNombre, claveExamen, duracion) {
+            if (examenIniciado) {
+                alert("El examen ya está en curso. No puedes reiniciar el tiempo.");
+                return;
+            }
+
+            examenIniciado = true;
+            const preguntasDiv = document.getElementById('preguntas');
+            preguntasDiv.innerHTML = '';
+            document.getElementById('nombreExamen').innerText = examenNombre;
+
+            const uidEstudiante = localStorage.getItem("alumnoId");
+            const examenDocRef = doc(db, "ExamenResuelto", `${examenNombre}_${uidEstudiante}`);
+            const examenDoc = await getDoc(examenDocRef);
+
+            if (examenDoc.exists()) {
+                alert("Ya has respondido este examen. No puedes responderlo de nuevo.");
+                examenIniciado = false;
+                return;
+            }
+
+            cargarPreguntas(examenNombre, claveExamen);
+            iniciarTemporizador(duracion);
+            document.getElementById('preguntasContainer').style.display = "block";
+        }
+
+        async function cargarPreguntas(examenNombre, claveExamen) {
+            const preguntasDiv = document.getElementById('preguntas');
+            const querySnapshot = await getDocs(collection(db, "preguntas"));
+            totalPreguntas = 0;
+
+            querySnapshot.forEach((doc) => {
+                const data = doc.data();
+                if (data.nombreExamen === examenNombre && data.claveExamen === claveExamen) {
+                    totalPreguntas++;
+                    const preguntaDiv = document.createElement('div');
+                    preguntaDiv.className = 'pregunta';
+                    preguntaDiv.innerHTML = `
+                        <strong>${data.pregunta}</strong><br>
+                        <label><input type="radio" name="${data.pregunta}" value="A"> ${data.opciones.A}</label>
+                        <label><input type="radio" name="${data.pregunta}" value="B"> ${data.opciones.B}</label>
+                        <label><input type="radio" name="${data.pregunta}" value="C"> ${data.opciones.C}</label>
+                    `;
+                    preguntasDiv.appendChild(preguntaDiv);
+                }
+            });
+        }
+
+        function iniciarTemporizador(duracion) {
+            clearInterval(timerInterval);
+            let tiempoRestante = duracion * 60;
+            const tiempoRestanteElement = document.getElementById('tiempoRestante');
+
+            timerInterval = setInterval(() => {
+                const minutos = Math.floor(tiempoRestante / 60);
+                const segundos = tiempoRestante % 60;
+                tiempoRestanteElement.innerText = `${minutos}:${segundos < 10 ? '0' : ''}${segundos}`;
+                tiempoRestante--;
+
+                if (tiempoRestante < 0) {
+                    clearInterval(timerInterval);
+                    guardarRespuestas();
+                    alert('El tiempo ha terminado. Las respuestas se han guardado automáticamente.');
+                }
+            }, 1000);
+        }
+
+        async function guardarRespuestas() {
+            clearInterval(timerInterval);
+            const respuestas = {};
+            const preguntas = document.querySelectorAll('.pregunta');
+            let respuestasCorrectas = 0;
+            const uidEstudiante = localStorage.getItem("alumnoId");
+            const fullName = localStorage.getItem("fullName");
+            const examenNombre = document.getElementById('nombreExamen').innerText;
+            const claveExamen = document.getElementById('claveInput').value; // Obtener la clave del examen desde el input
+            for (let pregunta of preguntas) {
+                const inputs = pregunta.querySelectorAll('input[type="radio"]');
+                let seleccionada = null;
+                inputs.forEach(input => {
+                    if (input.checked) seleccionada = input.value;
+                    input.disabled = true;
+                });
+                const preguntaTexto = pregunta.querySelector('strong').innerText;
+                respuestas[preguntaTexto] = seleccionada || null;
+
+                const respuestaCorrecta = await obtenerRespuestaCorrecta(preguntaTexto);
+                if (seleccionada && seleccionada.trim().toLowerCase() === respuestaCorrecta.trim().toLowerCase()) {
+                    respuestasCorrectas++;
+                }
+            }
+
+            const calificacion = ((respuestasCorrectas / totalPreguntas) * 100).toFixed(2);
+
+            await setDoc(doc(db, "ExamenResuelto", `${examenNombre}_${uidEstudiante}`), {
+                idExamen: examenNombre,
+                claveExamen: claveExamen,
+                fullName: fullName,
+                uid: uidEstudiante,
+                calificacion: calificacion,
+                aciertos: respuestasCorrectas,
+                fechaHoraTermina: new Date().toISOString(),
+                examenCompletado: true
+            });
+
+            const resultadoTexto = `${respuestasCorrectas} de ${totalPreguntas} correctas. Calificación: ${calificacion}%. ¡Gracias por participar en el examen!`;
+            document.getElementById("resultadoTexto").innerText = resultadoTexto;
+            document.getElementById("resultadosModal").style.display = "block";
+
+            examenIniciado = false;
+        }
+
+        async function obtenerRespuestaCorrecta(preguntaTexto) {
+            const querySnapshot = await getDocs(collection(db, "preguntas"));
+            let respuestaCorrecta = null;
+            querySnapshot.forEach((doc) => {
+                const data = doc.data();
+                if (data.pregunta.trim().toLowerCase() === preguntaTexto.trim().toLowerCase()) {
+                    respuestaCorrecta = data.respuestaCorrecta;
+                }
+            });
+            return respuestaCorrecta;
+        }
+
+        async function verResultados(examenNombre) {
+            const uidEstudiante = localStorage.getItem("alumnoId");
+            const resultadoDoc = await getDoc(doc(db, "ExamenResuelto", `${examenNombre}_${uidEstudiante}`));
+            if (resultadoDoc.exists()) {
+                const data = resultadoDoc.data();
+                const resultadoTexto = `${data.aciertos} de ${totalPreguntas} correctas. Calificación: ${data.calificacion}%. ¡Gracias por participar en el examen!`;
+                document.getElementById("resultadoTexto").innerText = resultadoTexto;
+                document.getElementById("resultadosModal").style.display = "block";
+            } else {
+                alert("No se encontraron resultados para este examen.");
+            }
+        }
+
+        document.getElementById('claveButton').addEventListener('click', () => {
+            const claveInput = document.getElementById('claveInput').value;
+            buscarExamenesPorClave(claveInput);
+        });
+
+        document.getElementById("closeResultadosModal").onclick = function () {
+            document.getElementById("resultadosModal").style.display = "none";
+        };
+        async function generarConstancia() {
+    const { jsPDF } = window.jspdf;
+    const uidEstudiante = localStorage.getItem("alumnoId");
+    const nombreEstudiante = localStorage.getItem("fullName") || "Estudiante";
+    if (!uidEstudiante || !nombreEstudiante) {
+        alert("No se ha encontrado información del estudiante.");
+        return;
+    }
+
+    const querySnapshot = await getDocs(collection(db, "ExamenResuelto"));
+    let totalCalificaciones = 0;
+    let numeroExamenes = 0;
+
+    querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        if (data.uid === uidEstudiante) {
+            totalCalificaciones += parseFloat(data.calificacion);
+            numeroExamenes++;
+        }
+    });
+
+    if (numeroExamenes === 0) {
+        alert("No se encontraron exámenes para este estudiante.");
+        return;
+    }
+
+    const promedio = (totalCalificaciones / numeroExamenes).toFixed(2);
+
+    // Crear PDF
+    const pdf = new jsPDF();
+
+    // Cargar y añadir imágenes
+    const img1 = new Image();
+    const img2 = new Image();
+    img1.src = "tec1.png"; // Ruta de la imagen tec1.png
+    img2.src = "tec2.png"; // Ruta de la imagen tec2.png
+
+    // Esperar a que ambas imágenes se carguen
+    img1.onload = () => {
+        img2.onload = () => {
+            // Añadir las imágenes al PDF
+            pdf.addImage(img1, "PNG", 10, 5, 50, 30); // Esquina superior izquierda
+            pdf.addImage(img2, "PNG", 170, 5, 30, 33); // Esquina superior derecha
+
+            // Añadir contenido de la constancia
+            pdf.setFontSize(16);
+            pdf.text("Instituto Tecnológico de Chilpancingo", 20, 50);
+            pdf.setFontSize(14);
+            pdf.text("Departamento de Servicios Escolares", 20, 60);
+            pdf.setFontSize(16);
+            pdf.text("CONSTANCIA DE ESTUDIOS", 20, 80);
+            pdf.setFontSize(12);
+            pdf.text(`Estudiante: ${nombreEstudiante}`, 20, 100);
+            pdf.text(`Programa Académico: Ingeniería en Sistemas Computacionales`, 20, 110);
+            pdf.text(`Fecha de Emisión: ${new Date().toLocaleDateString()}`, 20, 120);
+            pdf.setFontSize(12);
+            pdf.text(
+                `El Instituto Tecnológico de Chilpancingo, por medio del presente documento, ` +
+                `hace constar que ${nombreEstudiante} ha presentado un total de ${numeroExamenes} ` +
+                `exámenes en la plataforma de evaluación en línea de nuestra institución, obteniendo ` +
+                `un promedio general de ${promedio}.`,
+                20, 140, { maxWidth: 170 }
+            );
+            pdf.text("Atentamente,", 20, 170);
+            pdf.text("El Instituto Tecnológico de Chilpancingo", 20, 180);
+
+            // Descargar PDF
+            pdf.save("Constancia_de_Promedio.pdf");
+        };
+    };
+}
+
+
+        window.mostrarPreguntas = mostrarPreguntas;
+        window.verResultados = verResultados;
+        window.generarConstancia = generarConstancia;
+        document.getElementById("guardarButton").addEventListener('click', guardarRespuestas);
+    </script>
+</body>
+
+</html>

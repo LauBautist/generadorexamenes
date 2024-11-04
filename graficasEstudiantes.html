@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Exámenes y Gráfica de Calificaciones</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #95b8d1;
+            margin: 0;
+            padding: 20px;
+        }
+        .nav {
+            background-color: #ec7aad;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .nav a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            margin-right: 20px;
+            transition: color 0.3s;
+        }
+        .nav a:hover {
+            color: #b8e0d2;
+        }
+        h1 {
+            text-align: center;
+            color: #d6156c;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            background-color: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .motivational-text {
+            color: #7b9daf;
+            font-size: 18px;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+        .chart-container {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        .chart-container h2 {
+            color: #d6156c;
+            font-size: 22px;
+            font-weight: 600;
+        }
+        canvas {
+            margin-top: 20px;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="nav">
+        <a href="Estu.html">Regresar</a>
+        <a href="index.html">Cerrar Sesión</a>
+    </div>
+    <h1>Lista de Exámenes y Gráfica de Calificaciones</h1>
+    <div class="container">
+        <p class="motivational-text">
+            ¡Bienvenido! Aquí puedes ver el avance de tus resultados de exámenes. ¡Sigue esforzándote y mejorando tus calificaciones!
+        </p>
+    </div>
+
+    <!-- Contenedor para la gráfica -->
+    <div class="chart-container">
+        <h2>Gráfica de Calificaciones</h2>
+        <canvas id="calificacionesChart"></canvas>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
+        import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "API_KEY",
+            authDomain: "cuentas-ddcbc.firebaseapp.com",
+            projectId: "cuentas-ddcbc",
+            storageBucket: "cuentas-ddcbc.appspot.com",
+            messagingSenderId: "416491681259",
+            appId: "1:41697ff964d1acede8d5ae"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const uidEstudiante = localStorage.getItem("alumnoId");
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            const resultados = await obtenerResultados(uidEstudiante);
+            mostrarGrafica(resultados);
+        });
+
+        async function obtenerResultados(uid) {
+            const querySnapshot = await getDocs(collection(db, "ExamenResuelto"));
+            const resultados = [];
+
+            querySnapshot.forEach((doc) => {
+                const data = doc.data();
+                if (data.uid === uid) {
+                    resultados.push({
+                        examen: data.idExamen,
+                        calificacion: parseFloat(data.calificacion),
+                        fecha: data.fechaHoraTermina
+                    });
+                }
+            });
+
+            resultados.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+            return resultados;
+        }
+
+        function mostrarGrafica(resultados) {
+            const labels = resultados.map((resultado) => resultado.examen);
+            const data = resultados.map((resultado) => resultado.calificacion);
+
+            const ctx = document.getElementById('calificacionesChart').getContext('2d');
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Calificaciones',
+                        data: data,
+                        backgroundColor: 'rgba(214, 21, 108, 0.2)',
+                        borderColor: '#d6156c',
+                        borderWidth: 2,
+                        fill: false
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: 'Calificación'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Exámenes'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

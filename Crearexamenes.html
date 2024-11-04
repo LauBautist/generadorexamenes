@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Exámenes - Alumnos</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #95b8d1;
+            margin: 0;
+            padding: 0;
+        }
+
+        .header {
+            background-color: #eac4d5;
+            color: #d6156c;
+            font-weight: bold;
+            padding: 20px;
+            text-align: center;
+            font-size: 2.5em;
+            border-radius: 8px;
+            position: relative;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .button-add {
+            background-color: #b8e0d2;
+            color: #013220;
+            font-weight: bold;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            cursor: pointer;
+            margin-bottom: 20px;
+            margin-top: 10px;
+            display: block;
+            text-align: center;
+            text-decoration: none;
+            width: fit-content;
+            transition: background-color 0.3s;
+        }
+
+        .button-add:hover {
+            background-color: #a2c7c5;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        .table th,
+        .table td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+
+        .table th {
+            background-color: #eac4d5;
+            color: #8b4363;
+        }
+
+        .table tbody tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        .modal {
+            max-width: 80%;
+            border-radius: 10px;
+        }
+
+        .modal-content h4 {
+            color: #6a0dad;
+        }
+
+        .pregunta-card {
+            background-color: #f9f3ff;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+
+        .pregunta-card h5 {
+            font-size: 1.2em;
+            color: #6a0dad;
+        }
+
+        .opcion {
+            margin: 5px 0;
+        }
+
+        /* Botones de editar y eliminar en las preguntas */
+        .editar-btn,
+        .eliminar-btn {
+            background-color: #ffb74d;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+
+        .eliminar-btn {
+            background-color: #e57373;
+        }
+
+        .mostrar-examen-btn,
+        .eliminar-examen-btn {
+            background-color: #95b8d1;
+            color: #013220;
+            font-weight: bold;
+            border: none;
+            border-radius: 5px;
+            padding: 10px;
+            font-size: 1em;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background-color 0.3s;
+            margin-right: 10px;
+        }
+
+        .mostrar-examen-btn:hover,
+        .eliminar-examen-btn:hover {
+            background-color: #7b9daf;
+        }
+
+        .button-back {
+            background-color: #b8e0d2;
+            color: #013220;
+            font-weight: bold;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+            transition: background-color 0.3s;
+            display: block;
+            width: fit-content;
+            margin: 20px auto 0;
+        }
+
+        .button-back:hover {
+            background-color: #a2c7c5;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header">
+        Panel de Exámenes
+    </div>
+
+    <div class="input-field">
+        <input type="text" id="searchExams" placeholder="Buscar examen por nombre...">
+    </div>
+
+    <div class="container">
+        <a id="agregarExamenBtn" href="#" class="button-add">Agregar</a>
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Nombre del Examen</th>
+                    <th>Fecha</th>
+                    <th>Hora</th>
+                    <th>Duración</th>
+                    <th>Opciones</th>
+                </tr>
+            </thead>
+            <tbody id="examTableBody">
+                <!-- Aquí se agregarán los exámenes dinámicamente -->
+            </tbody>
+        </table>
+
+        <div style="display: flex; justify-content: center; gap: 5px;">
+        <a href="Clases.html" class="button-back">Regresar</a>
+        <a href="Examenescontestados.html" class="button-back" style="display: inline-block; margin-left: 10px;">Ver Calificaciones</a>
+    </div>
+    </div>
+
+    <div id="examenModal" class="modal">
+        <div class="modal-content">
+            <h4>Preguntas del Examen</h4>
+            <div id="preguntasContainer">
+                <!-- Aquí se agregarán las preguntas dinámicamente con estilo -->
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="modal-close btn">Cerrar</button>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
+        import { getFirestore, collection, query, where, getDocs, doc, updateDoc, deleteDoc, addDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBLwvUz_7V6rAcDrAEkpb2PqMuxbSFBo5I",
+            authDomain: "cuentas-ddcbc.firebaseapp.com",
+            projectId: "cuentas-ddcbc",
+            storageBucket: "cuentas-ddcbc.appspot.com",
+            messagingSenderId: "416491681259",
+            appId: "1:416491681259:web:41697ff964d1acede8d5ae"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth();
+
+        onAuthStateChanged(auth, (user) => {
+            if (!user) {
+                window.location.href = 'Login.html';
+            } else {
+                cargarExamenes(user.uid);
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const modalElems = document.querySelectorAll('.modal');
+            M.Modal.init(modalElems);
+        });
+
+        async function cargarExamenes(userId) {
+            const examTableBody = document.getElementById('examTableBody');
+            examTableBody.innerHTML = '';
+
+            const classId = new URLSearchParams(window.location.search).get('classId');
+
+            if (!classId) {
+                alert('No se ha especificado la clase. Por favor, regrese y seleccione una clase.');
+                return;
+            }
+
+            const examQuery = query(
+                collection(db, "examenes"),
+                where("userId", "==", userId),
+                where("classId", "==", classId)
+            );
+
+            const querySnapshot = await getDocs(examQuery);
+
+            const clavesExamenes = new Set();
+
+            querySnapshot.forEach((docSnap) => {
+                const examen = docSnap.data();
+                if (!clavesExamenes.has(examen.claveExamen)) {
+                    clavesExamenes.add(examen.claveExamen);
+
+                    const row = examTableBody.insertRow();
+                    row.insertCell(0).innerText = examen.nombreExamen;
+                    row.insertCell(1).innerText = examen.fechaExamen;
+                    row.insertCell(2).innerText = examen.horaExamen;
+                    row.insertCell(3).innerText = examen.duracionExamen;
+
+                    const opcionesCell = row.insertCell(4);
+
+                    const mostrarExamenButton = document.createElement('button');
+                    mostrarExamenButton.className = 'mostrar-examen-btn';
+                    mostrarExamenButton.innerText = 'Mostrar Examen';
+                    mostrarExamenButton.onclick = () => mostrarExamen(examen.claveExamen);
+                    opcionesCell.appendChild(mostrarExamenButton);
+
+                    const eliminarExamenButton = document.createElement('button');
+                    eliminarExamenButton.className = 'eliminar-examen-btn';
+                    eliminarExamenButton.innerText = 'Eliminar Examen';
+                    eliminarExamenButton.onclick = () => eliminarExamen(examen.claveExamen);
+                    opcionesCell.appendChild(eliminarExamenButton);
+
+                    // Botón para generar PDF
+                    const pdfButton = document.createElement('button');
+                    pdfButton.className = 'mostrar-examen-btn';
+                    pdfButton.innerText = 'PDF';
+                    pdfButton.onclick = () => generarPDF(examen.claveExamen);
+                    opcionesCell.appendChild(pdfButton);
+                }
+            });
+        }
+
+        async function mostrarExamen(claveExamen) {
+            const preguntasContainer = document.getElementById('preguntasContainer');
+            preguntasContainer.innerHTML = '';
+
+            const preguntasQuery = query(collection(db, "preguntas"), where("claveExamen", "==", claveExamen));
+            const querySnapshot = await getDocs(preguntasQuery);
+
+            querySnapshot.forEach((docSnap) => {
+                const pregunta = docSnap.data();
+                const preguntaId = docSnap.id;
+
+                const preguntaCard = document.createElement('div');
+                preguntaCard.classList.add('pregunta-card');
+
+                const preguntaTexto = document.createElement('input');
+                preguntaTexto.value = pregunta.pregunta;
+                preguntaTexto.className = 'browser-default pregunta-texto';
+                preguntaCard.appendChild(preguntaTexto);
+
+                const opcionesInputs = {};
+                const incisosInputs = {};
+
+                for (const key in pregunta.opciones) {
+                    if (pregunta.opciones.hasOwnProperty(key)) {
+                        const opcionContainer = document.createElement('div');
+                        opcionContainer.className = 'opcion-container';
+                        opcionContainer.style.display = 'flex';
+                        opcionContainer.style.alignItems = 'center';
+                        opcionContainer.style.marginBottom = '10px';
+
+                        const incisoInput = document.createElement('input');
+                        incisoInput.value = key;
+                        incisoInput.className = 'browser-default inciso-texto';
+                        incisoInput.style.width = '30px';
+                        incisoInput.style.marginRight = '10px';
+                        incisoInput.style.textAlign = 'center';
+                        incisoInput.maxLength = 1;
+                        incisosInputs[key] = incisoInput;
+                        opcionContainer.appendChild(incisoInput);
+
+                        const opcionInput = document.createElement('input');
+                        opcionInput.value = pregunta.opciones[key];
+                        opcionInput.className = 'browser-default opcion-texto';
+                        opcionInput.placeholder = `Opción ${key}`;
+                        opcionInput.style.flex = '1';
+
+                        if (key === pregunta.respuestaCorrecta) {
+                            opcionInput.style.backgroundColor = '#c8e6c9';
+                        }
+
+                        opcionesInputs[key] = opcionInput;
+
+                        opcionContainer.appendChild(opcionInput);
+                        preguntaCard.appendChild(opcionContainer);
+                    }
+                }
+
+                const respuestaCorrectaInput = document.createElement('input');
+                respuestaCorrectaInput.value = pregunta.respuestaCorrecta;
+                respuestaCorrectaInput.className = 'browser-default respuesta-correcta';
+                respuestaCorrectaInput.placeholder = 'Respuesta Correcta (A, B, C, ...)';
+                respuestaCorrectaInput.addEventListener('input', () => {
+                    actualizarColorRespuestas(opcionesInputs, respuestaCorrectaInput.value);
+                });
+                preguntaCard.appendChild(respuestaCorrectaInput);
+
+                const editarBtn = document.createElement('button');
+                editarBtn.className = 'editar-btn';
+                editarBtn.innerText = 'Modificar';
+                editarBtn.onclick = async () => {
+                    const nuevasOpciones = {};
+                    const nuevosIncisos = {};
+
+                    for (const key in opcionesInputs) {
+                        if (opcionesInputs.hasOwnProperty(key)) {
+                            const nuevoInciso = incisosInputs[key].value.toUpperCase();
+                            nuevasOpciones[nuevoInciso] = opcionesInputs[key].value;
+                        }
+                    }
+
+                    const nuevaRespuestaCorrecta = respuestaCorrectaInput.value.toUpperCase();
+
+                    await modificarPregunta(preguntaId, preguntaTexto.value, nuevasOpciones, nuevaRespuestaCorrecta);
+                    actualizarColorRespuestas(opcionesInputs, nuevaRespuestaCorrecta);
+                };
+                preguntaCard.appendChild(editarBtn);
+
+                const eliminarBtn = document.createElement('button');
+                eliminarBtn.className = 'eliminar-btn';
+                eliminarBtn.innerText = 'Eliminar';
+                eliminarBtn.onclick = () => eliminarPregunta(preguntaId, preguntaCard);
+                preguntaCard.appendChild(eliminarBtn);
+
+                preguntasContainer.appendChild(preguntaCard);
+            });
+
+            const modalInstance = M.Modal.getInstance(document.getElementById('examenModal'));
+            modalInstance.open();
+        }
+
+        function actualizarColorRespuestas(opcionesInputs, respuestaCorrecta) {
+            for (const key in opcionesInputs) {
+                if (opcionesInputs.hasOwnProperty(key)) {
+                    const opcionInput = opcionesInputs[key];
+                    if (key === respuestaCorrecta) {
+                        opcionInput.style.backgroundColor = '#c8e6c9';
+                    } else {
+                        opcionInput.style.backgroundColor = '';
+                    }
+                }
+            }
+        }
+
+        async function modificarPregunta(id, nuevaPregunta, nuevasOpciones, nuevaRespuestaCorrecta) {
+            try {
+                const preguntaRef = doc(db, "preguntas", id);
+
+                await updateDoc(preguntaRef, {
+                    pregunta: nuevaPregunta,
+                    opciones: nuevasOpciones,
+                    respuestaCorrecta: nuevaRespuestaCorrecta
+                });
+
+                alert('Pregunta actualizada correctamente');
+            } catch (error) {
+                console.error("Error al actualizar la pregunta:", error);
+                alert('Error al actualizar la pregunta');
+            }
+        }
+
+        async function eliminarPregunta(id, preguntaCard) {
+            const confirmacion = confirm("¿Estás seguro de que quieres eliminar esta pregunta?");
+            if (confirmacion) {
+                const preguntaRef = doc(db, "preguntas", id);
+                await deleteDoc(preguntaRef);
+                preguntaCard.remove();
+                alert('Pregunta eliminada correctamente');
+            }
+        }
+
+        async function eliminarExamen(claveExamen) {
+            const confirmacion = confirm("¿Estás seguro de que quieres eliminar este examen y todas sus preguntas?");
+            if (confirmacion) {
+                const examQuery = query(collection(db, "examenes"), where("claveExamen", "==", claveExamen));
+                const examSnapshot = await getDocs(examQuery);
+                examSnapshot.forEach(async (docSnap) => {
+                    const examRef = doc(db, "examenes", docSnap.id);
+                    await deleteDoc(examRef);
+                });
+
+                const preguntasQuery = query(collection(db, "preguntas"), where("claveExamen", "==", claveExamen));
+                const preguntasSnapshot = await getDocs(preguntasQuery);
+                preguntasSnapshot.forEach(async (docSnap) => {
+                    const preguntaRef = doc(db, "preguntas", docSnap.id);
+                    await deleteDoc(preguntaRef);
+                });
+
+                alert('Examen y todas sus preguntas eliminados correctamente');
+                cargarExamenes(auth.currentUser.uid);
+            }
+        }
+
+        document.getElementById('agregarExamenBtn').addEventListener('click', function () {
+            const classId = new URLSearchParams(window.location.search).get('classId');
+            if (classId) {
+                window.location.href = `Examen.html?classId=${classId}`;
+            } else {
+                alert('No se pudo obtener el ID de la clase. Por favor, vuelva a intentarlo.');
+            }
+        });
+
+        document.getElementById('searchExams').addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('#examTableBody tr');
+            rows.forEach(row => {
+                const examName = row.cells[0].textContent.toLowerCase();
+                if (examName.includes(searchTerm)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+
+        async function generarPDF(claveExamen) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            const examen = await obtenerExamen(claveExamen);
+            const preguntas = await obtenerPreguntas(claveExamen);
+
+            doc.setFontSize(18);
+            doc.text('Examen: ' + examen.nombreExamen, 10, 10);
+
+            doc.setFontSize(12);
+            doc.text('Fecha: ' + examen.fechaExamen, 10, 20);
+            doc.text('Hora: ' + examen.horaExamen, 10, 30);
+            doc.text('Duración: ' + examen.duracionExamen, 10, 40);
+
+            let y = 50;
+            preguntas.forEach((pregunta, index) => {
+                doc.text(`${index + 1}. ${pregunta.pregunta}`, 10, y);
+                y += 10;
+                for (const key in pregunta.opciones) {
+                    doc.text(`   ${key}) ${pregunta.opciones[key]}`, 10, y);
+                    y += 10;
+                }
+                y += 5;
+            });
+
+            doc.save(`Examen_${examen.nombreExamen}.pdf`);
+        }
+
+        async function obtenerExamen(claveExamen) {
+            const examQuery = query(collection(db, "examenes"), where("claveExamen", "==", claveExamen));
+            const querySnapshot = await getDocs(examQuery);
+            let examen = null;
+            querySnapshot.forEach((docSnap) => {
+                examen = docSnap.data();
+            });
+            return examen;
+        }
+
+        async function obtenerPreguntas(claveExamen) {
+            const preguntasQuery = query(collection(db, "preguntas"), where("claveExamen", "==", claveExamen));
+            const querySnapshot = await getDocs(preguntasQuery);
+            const preguntas = [];
+            querySnapshot.forEach((docSnap) => {
+                preguntas.push(docSnap.data());
+            });
+            return preguntas;
+        }
+
+    </script>
+</body>
+
+</html>

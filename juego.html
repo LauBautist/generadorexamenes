@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-scale, initial-scale=1.0">
+    <title>Juego del Cubo Disparador</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: url('espacio.jpg') no-repeat center center;
+            background-size: cover;
+            position: relative;
+        }
+
+        canvas {
+            display: block;
+            margin: auto;
+            background: transparent;
+        }
+
+        #scoreBoard {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-size: 40px;
+            color: white;
+            text-shadow: 2px 2px 4px black;
+            font-family: Arial, sans-serif;
+        }
+
+        #levelBoard {
+            position: absolute;
+            top: 10px;
+            left: 20px;
+            font-size: 40px;
+            color: white;
+            text-shadow: 2px 2px 4px black;
+            font-family: Arial, sans-serif;
+        }
+
+        #startMessage {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 50px;
+            color: white;
+            text-shadow: 2px 2px 4px black;
+            font-family: Arial, sans-serif;
+            display: none;
+            /* Inicialmente oculto */
+        }
+
+        #timer {
+            position: absolute;
+            top: 550px;
+            right: 20px;
+            font-size: 40px;
+            color: white;
+            text-shadow: 2px 2px 4px black;
+            font-family: Arial, sans-serif;
+        }
+
+        #topScores {
+            position: absolute;
+            top: 60px;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 40px;
+            color: white;
+            text-shadow: 2px 2px 4px black;
+            font-family: Arial, sans-serif;
+            display: none;
+            /* Inicialmente oculto */
+        }
+
+        #restartButton {
+            position: absolute;
+            top: 60%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 40px;
+            padding: 10px 20px;
+            background-color: blue;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            display: none;
+            /* Ocultar inicialmente */
+            font-family: Arial, sans-serif;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="scoreBoard">Puntuación: 0</div>
+    <div id="levelBoard">Nivel: 1</div>
+    <div id="timer">Tiempo: 00:00</div>
+    <div id="startMessage">Haz clic para iniciar el juego</div>
+    <div id="topScores"></div>
+    <button id="restartButton">Reiniciar Juego</button> <!-- Botón para reiniciar -->
+    <canvas id="gameCanvas" width="900" height="900"></canvas>
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        const scoreBoard = document.getElementById("scoreBoard");
+        const levelBoard = document.getElementById("levelBoard");
+        const startMessage = document.getElementById("startMessage");
+        const timerDisplay = document.getElementById("timer");
+        const topScoresDisplay = document.getElementById("topScores");
+        const restartButton = document.getElementById("restartButton");
+
+        const cubeImage = new Image();
+        cubeImage.src = 'nave.png';
+
+        const blockImage = new Image();
+        blockImage.src = 'moustro.png';
+
+        const catSound = new Audio('ex.mp3');
+
+        let score = 0;
+        let level = 1;
+        let cube = { x: 370, y: 550, width: 60, height: 60, speed: 5, direction: 1 };
+        let bullets = [];
+        let blocks = [];
+        let monster = { x: canvas.width / 2 - 100, y: 25, width: 200, height: 150, life: 5000, direction: 1, speed: 7.5 };
+        let gameStarted = false;
+        let gamePaused = false;
+        let seconds = 0;
+        let timerInterval;
+        let topScores = [];
+
+        function createBlocks() {
+            blocks = [];
+            if (level === 1) {
+                let rows = 8 * level;
+                let cols = 9 * level;
+                for (let i = 0; i < rows; i++) {
+                    for (let j = 0; j < cols; j++) {
+                        blocks.push({ x: 100 * j + 10, y: 50 * i + 10, width: 80, height: 30 });
+                    }
+                }
+            } else if (level === 2) {
+                // Reiniciar la vida del "moustro" cuando se crea en el nivel 2
+                monster.life = 5000;
+                blocks.push(monster);
+            }
+        }
+
+        createBlocks();
+
+        document.addEventListener("click", function () {
+            if (!gameStarted) {
+                startGame();
+            }
+            if (!gamePaused) {
+                bullets.push({ x: cube.x + cube.width / 2 - 2.5, y: cube.y, width: 5, height: 10, speed: 7 });
+            }
+        });
+
+        restartButton.addEventListener("click", function () {
+            resetGame(); // Reiniciar el juego
+        });
+
+        function startGame() {
+            gameStarted = true;
+            startMessage.style.display = "none";
+            seconds = 0;
+            timerDisplay.textContent = "Tiempo: 00:00";
+            topScoresDisplay.style.display = "none"; // Ocultar top scores
+            restartButton.style.display = "none"; // Ocultar botón de reinicio
+            timerInterval = setInterval(() => {
+                seconds++;
+                let minutes = Math.floor(seconds / 60);
+                let secs = seconds % 60;
+                timerDisplay.textContent = "Tiempo: " +
+                    (minutes < 10 ? "0" + minutes : minutes) + ":" +
+                    (secs < 10 ? "0" + secs : secs);
+            }, 1000);
+        }
+
+        function resetGame() {
+            score = 0;
+            level = 1;
+            cube = { x: 370, y: 550, width: 60, height: 60, speed: 5, direction: 1 };
+            bullets = [];
+            createBlocks();
+            gameStarted = false;
+            gamePaused = false;
+            seconds = 0;
+            timerDisplay.textContent = "Tiempo: 00:00";
+            scoreBoard.textContent = "Puntuación: " + score;
+            levelBoard.textContent = "Nivel: " + level;
+            topScoresDisplay.style.display = "none"; // Ocultar top scores
+            restartButton.style.display = "none"; // Ocultar botón de reinicio
+            clearInterval(timerInterval); // Limpiar el cronómetro
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // Limpiar el canvas
+            startMessage.style.display = "block"; // Mostrar mensaje de inicio
+        }
+
+        function update() {
+            if (!gameStarted || gamePaused) return;
+
+            cube.x += cube.speed * cube.direction;
+            if (cube.x <= 0 || cube.x >= canvas.width - cube.width) {
+                cube.direction *= -1;
+            }
+
+            for (let i = bullets.length - 1; i >= 0; i--) {
+                bullets[i].y -= bullets[i].speed;
+                if (bullets[i].y < 0) {
+                    bullets.splice(i, 1);
+                }
+            }
+
+            if (level === 2) {
+                monster.x += monster.speed * monster.direction;
+                if (monster.x <= 0 || monster.x >= canvas.width - monster.width) {
+                    monster.direction *= -1;
+                }
+            }
+
+            for (let i = bullets.length - 1; i >= 0; i--) {
+                for (let j = blocks.length - 1; j >= 0; j--) {
+                    if (
+                        bullets[i].x < blocks[j].x + blocks[j].width &&
+                        bullets[i].x + bullets[i].width > blocks[j].x &&
+                        bullets[i].y < blocks[j].y + blocks[j].height &&
+                        bullets[i].y + bullets[i].height > blocks[j].y
+                    ) {
+                        bullets.splice(i, 1);
+                        if (level === 2) {
+                            blocks[j].life -= 100;
+                        }
+                        score += 100;
+                        scoreBoard.textContent = "Puntuación: " + score;
+                        catSound.play();
+
+                        if (level === 2 && blocks[j].life <= 0) {
+                            blocks.splice(j, 1);
+                            clearInterval(timerInterval); // Pausar el cronómetro
+                            gamePaused = true; // Pausar el juego
+                            topScores.push(seconds); // Guardar el tiempo en el top 5
+                            topScores.sort((a, b) => a - b); // Ordenar de menor a mayor
+                            if (topScores.length > 5) topScores.pop(); // Mantener solo los 5 mejores
+                            displayTopScores(); // Mostrar el top 5
+                            restartButton.style.display = "block"; // Mostrar botón de reinicio
+                        } else if (level === 1) {
+                            blocks.splice(j, 1); // Eliminar bloque en nivel 1
+                        }
+                        break; // Salir del bucle de bloques
+                    }
+                }
+            }
+
+            // Verifica si no hay más bloques y avanza al siguiente nivel
+            if (blocks.length === 0) {
+                if (level === 1) {
+                    level += 1; // Aumentar el nivel a 2
+                    scoreBoard.textContent = "Puntuación: " + score; // Mostrar puntuación actual
+                    levelBoard.textContent = "Nivel: " + level; // Actualizar el nivel en la pantalla
+                    createBlocks(); // Crear bloques para el nuevo nivel
+                }
+            }
+        }
+
+        function displayTopScores() {
+            // Mostrar el top 5 en el centro de la pantalla
+            topScoresDisplay.style.display = "block";
+            topScoresDisplay.innerHTML = "<h2>Top 5 Tiempos</h2>";
+            topScores.forEach((time, index) => {
+                let minutes = Math.floor(time / 60);
+                let secs = time % 60;
+                topScoresDisplay.innerHTML += `<div>${index + 1}. ${minutes < 10 ? '0' + minutes : minutes}:${secs < 10 ? '0' + secs : secs}</div>`;
+            });
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(cubeImage, cube.x, cube.y, cube.width, cube.height);
+            ctx.fillStyle = "WHITE";
+            bullets.forEach(bullet => {
+                ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
+            });
+            blocks.forEach(block => {
+                ctx.drawImage(blockImage, block.x, block.y, block.width, block.height);
+                // Mostrar la barra de vida
+                if (level === 2 && block.life > 0) {
+                    const healthBarWidth = (block.life / 5000) * block.width; // Calcular el ancho de la barra
+                    ctx.fillStyle = "red";
+                    ctx.fillRect(block.x, block.y - 10, healthBarWidth, 5); // Barra de salud
+                }
+            });
+
+            // Mostrar mensaje de inicio si el juego no ha comenzado
+            if (!gameStarted) {
+                startMessage.style.display = "block"; // Mostrar mensaje de inicio
+            } else {
+                startMessage.style.display = "none"; // Ocultar mensaje de inicio
+            }
+
+            // Mostrar el top 5 si el juego ha terminado
+            if (gamePaused && blocks.length === 0) {
+                ctx.fillStyle = "white";
+                ctx.font = "50px Arial";
+                ctx.textAlign = "center";
+                
+            }
+        }
+
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        gameLoop();
+    </script>
+</body>
+
+</html>

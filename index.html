@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Exámenes</title>
+
+    <!-- Importar Materialize CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+
+    <!-- Importar Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <!-- Iconos de Google -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <!-- Estilos personalizados -->
+    <style>
+        /* Aplicar la fuente Poppins a toda la página */
+        body,
+        h4,
+        p,
+        a {
+            font-family: 'Poppins', sans-serif;
+        }
+
+        /* Fondo personalizado */
+        body {
+            background-color: #95b8d1;
+            transition: background-color 1s ease-in-out;
+        }
+
+        /* Espacio debajo del header */
+        .header-space {
+            margin-top: 80px;
+        }
+
+        /* Animación de fade-in compartida */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Barra de navegación con animación */
+        nav {
+            opacity: 0;
+            animation: fadeIn 2s ease-out forwards;
+        }
+
+        /* Color de botones */
+        .btn-custom {
+            background-color: #b8e0d2 !important;
+            /* Verde suave */
+            border: 1px solid white;
+            transition: transform 0.3s, box-shadow 0.3s;
+            color: #013220 !important;
+        }
+
+        /* Color de botones al pasar el cursor */
+        .btn-custom:hover {
+            background-color: #a2c7c5 !important;
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Mantener el color al hacer foco (focus) */
+        .btn-custom:focus {
+            background-color: #b8e0d2 !important;
+            outline: none;
+            box-shadow: none !important;
+            color: #013220 !important;
+            
+        }
+
+        /* Contenedor principal */
+        .main-content {
+            padding: 60px 40px;
+            text-align: center;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+            animation: fadeIn 2s ease-out forwards;
+        }
+
+        /* Alinear los botones en la misma fila */
+        .button-group {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        /* Estilo del formulario */
+        .input-field {
+            margin-bottom: 20px;
+        }
+
+        /* Estilo para el modal */
+        .modal {
+            border-radius: 15px;
+            background-color: #ffffff;
+        }
+
+        /* Color del texto en encabezados y párrafos */
+        h4 {
+            color: #000000;
+            font-weight: bold;
+            margin-top: -10px;
+            margin-bottom: 50px;
+        }
+
+        p {
+            color: #333;
+        }
+
+        /* Texto de enlaces */
+        a {
+            color: #eac4d5;
+        }
+
+        a:hover {
+            color: #b8e0d2;
+        }
+
+        /* Estilo del botón de cerrar modal */
+        .modal-footer {
+            background-color: #b8e0d2;
+        }
+
+        .modal-footer .btn {
+            background-color: #b8e0d2;
+            color: #013220 !important;
+            font-weight: bold;
+        }
+
+        .modal-footer .btn:hover {
+            background-color: #a2c7c5;
+        }
+
+        /* Estilo para el mensaje de feedback */
+        #feedback-message {
+            margin-top: 20px;
+            text-align: center;
+            font-weight: bold;
+            color: #95b8d1;
+        }
+
+        /* Ajustes para la imagen flotante con animación */
+        .welcome-image {
+            float: left;
+            margin-right: 20px;
+            width: 250px;
+            height: auto;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            opacity: 0;
+            animation: fadeIn 2s ease-in-out forwards;
+        }
+
+        /* Alinear los botones del modal de comentarios */
+        .button-group-modal {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        /* Color del encabezado del modal */
+        .modal-content h4 {
+            color: #d6156c;
+        }
+
+        /* Color de los iconos */
+        .material-icons {
+            color: #013220 !important;
+            font-weight: bold;
+        }
+
+        /* Tachita para cerrar el modal */
+        .close-modal {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            cursor: pointer;
+            font-size: 24px;
+            color: #013220;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Navbar -->
+    <nav class="white">
+        <div class="nav-wrapper container">
+            <!-- Eliminado el título de "Generador de Exámenes" -->
+            <ul id="nav-mobile" class="right hide-on-med-and-down">
+                <li><a href="#modal-contacto" class="black-text modal-trigger"><i
+                            class="material-icons left">mail</i>Comentarios</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Contenido Principal -->
+    <section class="main-content container header-space">
+        <h4 style="font-weight: bold; color: #d6156c;">Bienvenido al Generador de Exámenes</h4>
+
+        <img src="https://i.postimg.cc/768BYZGy/imagen.png" alt="Imagen de Bienvenida" class="welcome-image">
+
+        <p>Como maestro, crea y personaliza tus exámenes fácilmente. Configura la dificultad, elige entre distintos
+            tipos de preguntas y obtén informes automáticos de los resultados.</p>
+        <p>Como alumno, accede a los exámenes creados por tus profesores y completa tus evaluaciones en línea. ¡Mejora
+            tus conocimientos y prepárate para futuros exámenes!</p>
+
+        <!-- Grupo de botones alineados -->
+        <div class="button-group">
+            <a href="Crearcuenta.html" class="btn-large btn-custom waves-effect waves-light"><i
+                    class="material-icons left">person_add</i>Crear Cuenta Gratis</a>
+            <a href="Login.html" class="btn-large btn-custom waves-effect waves-light"><i
+                    class="material-icons left">login</i>Iniciar Sesión</a>
+        </div>
+    </section>
+
+    <!-- Modal de Contacto -->
+    <div id="modal-contacto" class="modal">
+        <div class="modal-content">
+            <span class="close-modal material-icons modal-close">close</span>
+            <h4>Envíanos tus comentarios</h4>
+            <form action="https://formspree.io/f/xdknqonb" method="POST">
+                <div class="input-field">
+                    <input type="text" id="name" name="name" required>
+                    <label for="name">Nombre:</label>
+                </div>
+                <div class="input-field">
+                    <input type="email" id="email" name="email" required>
+                    <label for="email">Correo Electrónico:</label>
+                </div>
+                <div class="input-field">
+                    <textarea id="message" name="message" class="materialize-textarea" required></textarea>
+                    <label for="message">Comentarios:</label>
+                </div>
+                <div id="feedback-message"></div>
+                <div class="button-group-modal">
+                    <button type="submit" class="btn btn-custom waves-effect waves-light">Enviar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Importar Materialize JS y jQuery -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+
+    <!-- JavaScript para inicializar el modal -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const modalElems = document.querySelectorAll('.modal');
+            M.Modal.init(modalElems);
+
+            const form = document.querySelector('form[action="https://formspree.io/f/xdknqonb"]');
+            const feedbackMessage = document.getElementById('feedback-message');
+
+            form.addEventListener('submit', function (event) {
+                event.preventDefault();
+
+                // Enviar el formulario utilizando fetch
+                fetch(form.action, {
+                    method: form.method,
+                    body: new FormData(form),
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                }).then(response => {
+                    if (response.ok) {
+                        form.reset();
+                        feedbackMessage.innerHTML = '<span class="feedback-blue">Comentario enviado exitosamente!</span>';
+                    } else {
+                        feedbackMessage.innerHTML = '<span class="feedback-blue">Hubo un error al enviar el comentario.</span>';
+                    }
+                }).catch(error => {
+                    console.error('Error:', error);
+                    feedbackMessage.innerHTML = '<span class="feedback-blue">Hubo un error al enviar el comentario.</span>';
+                });
+
+                setTimeout(() => {
+                    feedbackMessage.innerHTML = '';
+                }, 3000);
+            });
+
+            const mainContent = document.querySelector('.main-content');
+            mainContent.style.opacity = 1;
+        });
+    </script>
+
+</body>
+
+</html>

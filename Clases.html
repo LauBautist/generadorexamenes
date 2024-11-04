@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestor de Clases</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        .modal {
+            max-width: 80% !important;
+            height: 80% !important;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #95b8d1;
+            margin: 0;
+            padding: 0;
+        }
+
+        .header {
+            background-color: #eac4d5;
+            color: #d6156c;
+            font-size: 1.3em;
+            font-weight: bold;
+            padding: 20px;
+        }
+
+        .navbar {
+            background-color: #eac4d5;
+            box-shadow: none;
+        }
+
+        .navbar a {
+            color: #d6156c !important;
+        }
+
+
+        .input-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+
+        .input-field {
+            flex: 1;
+        }
+
+        .button-add {
+            background-color: #b8e0d2;
+            /* Color de fondo del botón */
+            color: #013220;
+            /* Cambiar el color del texto al verde */
+            font-weight: bold;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+            transition: background-color 0.3s;
+            flex-shrink: 0;
+        }
+
+
+        .button-add:hover {
+            background-color: #a2c7c5;
+        }
+
+        .info-button {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            font-family: 'Roboto', sans-serif;
+            font-size: 1rem;
+            color: #2b2b2b;
+            background-color: #f0f0f0;
+            padding: 10px 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s;
+            cursor: pointer;
+            margin-bottom: 20px;
+            width: fit-content;
+        }
+
+        .info-button i {
+            margin-right: 10px;
+            font-size: 1.2rem;
+            color: #0078d4;
+        }
+
+        .info-button:hover {
+            background-color: #e0e0e0;
+        }
+
+        .class-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .class-card {
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            background-color: #e1f5fe;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            position: relative;
+        }
+
+        /* Estilo base para los íconos de clase */
+        .class-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 5px;
+            background-color: #ffffff;
+            /* Fondo transparente */
+            color: #396a8f;
+            /* Color del ícono */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2em;
+            margin-bottom: 15px;
+            cursor: pointer;
+            border: none;
+            /* Sin borde */
+            box-shadow: none;
+            /* Sin sombra */
+        }
+
+        /* Mantener el color azul claro al hacer hover */
+        .class-icon:hover {
+            background-color: transparent;
+            /* Fondo transparente */
+            color: #95b8d1;
+            /* Color azulito al pasar el ratón */
+            border: none;
+            /* Sin borde */
+            box-shadow: none;
+            /* Sin sombra */
+        }
+
+        /* Evitar el color verde cuando se hace clic o se enfoca el ícono */
+        .class-icon:focus,
+        .class-icon:active {
+            background-color: transparent !important;
+            /* Sin fondo al enfocarse o activarse */
+            color: #396a8f !important;
+            /* Mantener el color del ícono */
+            outline: none !important;
+            /* Sin borde de enfoque */
+            box-shadow: none !important;
+            /* Sin sombra al enfocarse */
+        }
+
+        /* También aplica para los botones de icono en la clase */
+        .icon-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.5em;
+            color: #396a8f;
+            /* Color consistente con el ícono */
+            transition: color 0.3s;
+        }
+
+        /* Cambio al azulito en hover */
+        .icon-button:hover {
+            color: #95b8d1;
+            /* Cambia al azulito al pasar el ratón */
+        }
+
+        /* Evitar cambios de color en focus o active */
+        .icon-button:focus,
+        .icon-button:active {
+            color: #396a8f !important;
+            /* Mantener el mismo color del ícono */
+            background: none !important;
+            /* Fondo transparente */
+            outline: none !important;
+            /* Sin borde de enfoque */
+            box-shadow: none !important;
+            /* Sin sombra */
+        }
+
+
+        .class-name {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .icon-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .icon-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.5em;
+            color: #396a8f;
+            transition: color 0.3s;
+        }
+
+        .icon-button:hover {
+            color: #95b8d1;
+        }
+
+        .note {
+            font-size: 0.9em;
+            color: #777;
+            margin-top: 10px;
+        }
+
+        .edit-profile-form {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .edit-profile-form h5 {
+            margin-bottom: 20px;
+            color: #d6156c;
+        }
+
+        .button-save {
+            background-color: #b8e0d2;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background-color 0.3s;
+        }
+
+        .button-save:hover {
+            background-color: #a2c7c5;
+        }
+
+        .button-change-password {
+            background-color: #f0a0a0;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background-color 0.3s;
+        }
+
+        .button-change-password:hover {
+            background-color: #e08080;
+        }
+
+        /* Estilo del botón dentro del modal */
+        .modal-footer .btn,
+        .modal-content button {
+            color: #013220 !important;
+            /* Cambia el color del texto al verde que solicitaste */
+            font-weight: bold;
+            /* Añadir negrita si se requiere */
+        }
+
+        /* Estilo al pasar el cursor sobre el botón dentro del modal */
+        .modal-footer .btn:hover,
+        .modal-content button:hover {
+            background-color: #a2c7c5;
+            /* Mantén el color de fondo que desees */
+        }
+
+        .nav-wrapper {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #nav-mobile.left {
+            display: flex;
+            gap: 20px;
+            /* Espacio entre los elementos de la izquierda */
+        }
+
+        ul.right {
+            margin-right: 20px;
+            /* Ajuste opcional para el margen derecho */
+        }
+    </style>
+    <script type="module">
+        import { getAuth, signOut, updatePassword } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-auth.js";
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const logoutButton = document.getElementById('logoutButton');
+            logoutButton.addEventListener('click', () => {
+                const auth = getAuth();
+                signOut(auth).then(() => {
+                    window.location.href = 'Login.html';
+                }).catch((error) => {
+                    console.error('Error al cerrar sesión:', error);
+                });
+            });
+
+            const changePasswordButton = document.getElementById('changePasswordButton');
+            changePasswordButton.addEventListener('click', () => {
+                const changePasswordModal = document.querySelector('#modalCambiarContraseña');
+                const instance = M.Modal.getInstance(changePasswordModal);
+                instance.open();
+            });
+        });
+    </script>
+</head>
+
+<body>
+    <div class="header">
+        <span style="display: block; text-align: center; font-size: 1.8em;">Gestor de Clases</span>
+    </div>
+    <nav class="navbar">
+        <div class="nav-wrapper">
+            <ul id="nav-mobile" class="left">
+                <li><a href="#modalEditarPerfil" class="modal-trigger"><i class="fas fa-info-circle"></i> Editar
+                        perfil</a></li>
+                <li><a href="#modalCambiarContraseña" id="changePasswordButton" class="modal-trigger"><i
+                            class="fas fa-lock"></i> Cambiar contraseña</a></li>
+            </ul>
+            <ul class="right">
+                <li><a href="#" id="logoutButton"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="input-container">
+            <div class="input-field">
+                <input type="text" id="className" placeholder="Nombre de la clase a crear">
+            </div>
+            <a href="#" id="addClassButton" class="button-add">Agregar Clase</a>
+        </div>
+
+        <div id="classesContainer" class="class-grid">
+            <!-- Aquí se agregarán dinámicamente las clases -->
+        </div>
+    </div>
+
+    <!-- Modal para Editar Perfil -->
+    <div id="modalEditarPerfil" class="modal">
+        <div class="modal-header" style="padding-right: 20px; padding-top: 20px; text-align: right;">
+            <a href="#!" class="modal-close"><i class="fas fa-times"></i></a>
+        </div>
+        <div class="modal-content">
+            <h5>Editar Perfil</h5>
+            <form id="editarPerfilForm">
+                <label for="fullName">Nombre Completo</label>
+                <div class="input-field">
+                    <input type="text" id="fullName" required>
+                </div>
+                <label for="username">Nombre de Usuario</label>
+                <div class="input-field">
+                    <input type="text" id="username" required>
+                </div>
+                <label for="email">Correo Electrónico</label>
+                <div class="input-field">
+                    <input type="email" id="email" required disabled>
+                </div>
+                <button type="submit" class="button-save">Guardar Cambios</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para Cambiar Contraseña -->
+    <div id="modalCambiarContraseña" class="modal">
+        <div class="modal-header" style="padding-right: 20px; padding-top: 20px; text-align: right;">
+            <a href="#!" class="modal-close"><i class="fas fa-times"></i></a>
+        </div>
+        <div class="modal-content">
+            <h5>Cambiar Contraseña</h5>
+            <form id="cambiarContraseñaForm">
+                <div class="input-field">
+                    <label for="newPassword">Nueva Contraseña</label>
+                    <input type="password" id="newPassword" required>
+                </div>
+                <div class="input-field">
+                    <label for="confirmPassword">Confirmar Nueva Contraseña</label>
+                    <input type="password" id="confirmPassword" required>
+                </div>
+                <button type="submit" class="button-save">Cambiar Contraseña</button>
+            </form>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
+        import { getFirestore, collection, query, where, getDocs, addDoc, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged, updatePassword } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBLwvUz_7V6rAcDrAEkpb2PqMuxbSFBo5I",
+            authDomain: "cuentas-ddcbc.firebaseapp.com",
+            projectId: "cuentas-ddcbc",
+            storageBucket: "cuentas-ddcbc.appspot.com",
+            messagingSenderId: "416491681259",
+            appId: "1:416491681259:web:41697ff964d1acede8d5ae"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        const classesCollection = collection(db, "clases");
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const elems = document.querySelectorAll('.modal');
+            M.Modal.init(elems);
+        });
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                loadClasses();
+                loadUserData(user);
+            } else {
+                window.location.href = 'Login.html';
+            }
+        });
+
+        document.getElementById('addClassButton').addEventListener('click', async () => {
+            const className = document.getElementById('className').value;
+            if (className) {
+                const user = auth.currentUser;
+                const docRef = await addDoc(classesCollection, { name: className, userId: user.uid });
+                const classId = docRef.id; // El ID del documento es el classId
+                await updateDoc(docRef, { classId: classId }); // Guardar el classId en el documento
+                document.getElementById('className').value = '';
+                loadClasses();
+            }
+        });
+
+        document.getElementById('editarPerfilForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fullName = document.getElementById('fullName').value;
+            const username = document.getElementById('username').value;
+            const user = auth.currentUser;
+            const userQuery = query(collection(db, "users"), where("uid", "==", user.uid));
+            const querySnapshot = await getDocs(userQuery);
+
+            if (!querySnapshot.empty) {
+                const userDoc = querySnapshot.docs[0];
+                const userRef = doc(db, "users", userDoc.id);
+                await updateDoc(userRef, { fullName, username });
+                alert('Perfil actualizado con éxito');
+            } else {
+                alert('Error al actualizar el perfil');
+            }
+        });
+
+        document.getElementById('cambiarContraseñaForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (newPassword !== confirmPassword) {
+                alert('Las contraseñas no coinciden');
+                return;
+            }
+
+            const user = auth.currentUser;
+            try {
+                await updatePassword(user, newPassword);
+                alert('Contraseña actualizada con éxito');
+                const changePasswordModal = document.querySelector('#modalCambiarContraseña');
+                const instance = M.Modal.getInstance(changePasswordModal);
+                instance.close();
+            } catch (error) {
+                console.error('Error al cambiar la contraseña:', error);
+                alert('Error al cambiar la contraseña');
+            }
+        });
+
+        async function loadClasses() {
+            const classesContainer = document.getElementById('classesContainer');
+            classesContainer.innerHTML = '';
+            const user = auth.currentUser;
+            const querySnapshot = await getDocs(classesCollection);
+            querySnapshot.forEach((doc) => {
+                const classData = doc.data();
+                if (classData.userId === user.uid) {
+                    const classCard = document.createElement('div');
+                    classCard.className = 'class-card';
+
+                    const classIcon = document.createElement('div');
+                    classIcon.className = 'class-icon';
+                    classIcon.textContent = classData.name.charAt(0).toUpperCase();
+                    classCard.appendChild(classIcon);
+
+                    const className = document.createElement('div');
+                    className.className = 'class-name';
+                    className.textContent = classData.name;
+                    classCard.appendChild(className);
+
+                    const iconButtons = document.createElement('div');
+                    iconButtons.className = 'icon-buttons';
+
+                    // Icono para ir a crear exámenes
+                    const examIcon = document.createElement('button');
+                    examIcon.className = 'icon-button';
+                    examIcon.innerHTML = '<i class="fas fa-clipboard"></i>';
+                    examIcon.addEventListener('click', () => {
+                        window.location.href = `Crearexamenes.html?classId=${classData.classId}`;
+                    });
+                    iconButtons.appendChild(examIcon);
+
+                    // Botón para editar la clase
+                    const editIcon = document.createElement('button');
+                    editIcon.className = 'icon-button';
+                    editIcon.innerHTML = '<i class="fas fa-edit"></i>';
+                    editIcon.addEventListener('click', () => editClass(doc.id, classData.name));
+                    iconButtons.appendChild(editIcon);
+
+                    // Botón para eliminar la clase con confirmación
+                    const deleteIcon = document.createElement('button');
+                    deleteIcon.className = 'icon-button';
+                    deleteIcon.innerHTML = '<i class="fas fa-trash-alt"></i>';
+                    deleteIcon.addEventListener('click', () => {
+                        const confirmDelete = confirm("¿Estás segura/o de que deseas eliminar esta clase?");
+                        if (confirmDelete) {
+                            deleteClass(doc.id);
+                        }
+                    });
+                    iconButtons.appendChild(deleteIcon);
+
+                    classCard.appendChild(iconButtons);
+
+                    // Nota para la clase
+                    const note = document.createElement('div');
+                    note.className = 'note';
+                    note.textContent = "Nota: Solo tú puedes ver y editar esta clase.";
+                    classCard.appendChild(note);
+
+                    classesContainer.appendChild(classCard);
+                }
+            });
+        }
+
+        async function deleteClass(classId) {
+            // Eliminar los exámenes relacionados a la clase
+            const examQuery = query(collection(db, "examenes"), where("classId", "==", classId));
+            const examSnapshot = await getDocs(examQuery);
+
+            // Eliminar todos los exámenes asociados a la clase
+            const examDeletePromises = examSnapshot.docs.map(async (examDoc) => {
+                const claveExamen = examDoc.data().claveExamen;
+
+                // Eliminar las preguntas relacionadas al examen
+                const preguntasQuery = query(collection(db, "preguntas"), where("claveExamen", "==", claveExamen));
+                const preguntasSnapshot = await getDocs(preguntasQuery);
+                const preguntasDeletePromises = preguntasSnapshot.docs.map((preguntaDoc) => deleteDoc(doc(db, "preguntas", preguntaDoc.id)));
+                await Promise.all(preguntasDeletePromises);
+
+                // Eliminar el examen
+                return deleteDoc(doc(db, "examenes", examDoc.id));
+            });
+
+            // Esperar a que todos los exámenes y sus preguntas sean eliminados
+            await Promise.all(examDeletePromises);
+
+            // Ahora eliminar la clase
+            await deleteDoc(doc(db, "clases", classId));
+
+            // Recargar las clases
+            loadClasses();
+        }
+
+
+        async function editClass(classId, currentName) {
+            const newName = prompt("Editar nombre de la clase:", currentName);
+            if (newName) {
+                const classRef = doc(db, "clases", classId);
+                await updateDoc(classRef, { name: newName });
+                loadClasses();
+            }
+        }
+
+        async function loadUserData(user) {
+            try {
+                const userQuery = query(collection(db, "users"), where("uid", "==", user.uid));
+                const querySnapshot = await getDocs(userQuery);
+                if (!querySnapshot.empty) {
+                    const userData = querySnapshot.docs[0].data();
+                    document.getElementById('fullName').value = userData.fullName;
+                    document.getElementById('username').value = userData.username;
+                    document.getElementById('email').value = userData.email;
+                }
+            } catch (error) {
+                console.error("Error al cargar los datos del usuario: ", error);
+            }
+        }
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+</body>
+
+</html>

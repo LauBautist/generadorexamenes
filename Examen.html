@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Exámenes</title>
+    <!-- Importar Materialize CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #95b8d1;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        h1,
+        h2 {
+            text-align: center;
+            color: #95b8d1;
+            font-weight: bold;
+            font-size: 2.3em;
+        }
+
+        .input-field label {
+            color: #95b8d1;
+            font-weight: bold;
+        }
+
+        .input-field input {
+            color: #95b8d1;
+            font-weight: bold;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            /* Espacio entre los botones */
+            margin-top: 10px;
+        }
+
+        /* Botones más pequeños */
+        button {
+            padding: 5px 10px;
+            /* Reduce el padding para hacer el botón más pequeño */
+            font-size: 0.9em;
+            /* Reduce el tamaño de la fuente */
+            background-color: #b8e0d2;
+            color: #013220;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .button-group {
+            display: flex;
+            justify-content: center;
+            /* Centra horizontalmente los elementos dentro del contenedor */
+            gap: 10px;
+            /* Espacio entre los botones */
+            margin-top: 10px;
+        }
+
+
+        button:hover {
+            background-color: #95b8d1;
+            /* Color al pasar el ratón */
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            text-align: left;
+            border: 1px solid #ddd;
+
+        }
+
+        th {
+            background-color: #eac4d5;
+            color: #d6156c;
+        }
+
+        .respuesta {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .respuesta input[type="radio"] {
+            margin-right: 10px;
+        }
+
+        .button-back {
+            background-color: #b8e0d2;
+            color: #013220;
+            padding: 5px 15px;
+            /* Reduce el padding para hacerlo más pequeño */
+            border: none;
+            border-radius: 5px;
+            font-size: 0.9em;
+            /* Reduce el tamaño del texto */
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+            transition: background-color 0.3s;
+            display: block;
+            width: fit-content;
+            margin: 20px auto 0;
+        }
+
+        .button-back:hover {
+            background-color: #a2c7c5;
+        }
+
+
+        #guardarExamen {
+            display: block;
+            /* Hace que el botón sea tratado como un bloque */
+            margin: 20px auto;
+            /* Centra horizontalmente usando el margen automático */
+            padding: 10px 20px;
+            /* Ajusta el padding según lo necesites */
+            background-color: #b8e0d2;
+            color: #013220;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        #guardarExamen:hover {
+            background-color: #95b8d1;
+            /* Color al pasar el ratón */
+        }
+
+        .eliminar-inciso {
+            background-color: #e57373;
+            /* Rojo claro */
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 10px;
+            font-size: 0.8em;
+            cursor: pointer;
+            margin-left: 10px;
+            /* Espacio para separar el botón del campo de texto */
+            transition: background-color 0.3s;
+        }
+
+        .eliminar-inciso:hover {
+            background-color: #d32f2f;
+            /* Rojo más oscuro al pasar el ratón */
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>Generador de Exámenes</h1>
+
+        <label for="nombreExamen">Ingrese el nombre del examen</label>
+        <div class="input-field">
+            <input type="text" id="nombreExamen" required>
+        </div>
+
+        <label for="fechaExamen">Fecha del examen</label>
+        <div class="input-field">
+            <input type="date" id="fechaExamen" required>
+        </div>
+
+        <label for="horaExamen">Hora del examen</label>
+        <div class="input-field">
+            <input type="time" id="horaExamen" required>
+        </div>
+
+        <label for="duraciónExamen">Duración del examen (minutos)</label>
+        <div class="input-field">
+            <input type="number" id="duracionExamen" required min="1">
+        </div>
+
+        <label for="claveExamen">Clave del Examen (Generada automáticamente)</label>
+        <div class="input-field">
+            <input type="text" id="claveExamen" readonly>
+        </div>
+
+        <form id="preguntaForm">
+            <h2>Formulario de Pregunta</h2>
+            <div class="input-field">
+                <label for="pregunta">Pregunta</label>
+                <input type="text" id="pregunta" required>
+            </div>
+
+            <div id="respuestasContainer">
+                <!-- Incisos agregados dinámicamente por el usuario -->
+            </div>
+
+            <div class="button-group">
+                <button type="button" id="agregarInciso">Agregar Inciso</button>
+                <button type="submit">Agregar Pregunta</button>
+            </div>
+        </form>
+
+        <h2>Lista de Preguntas</h2>
+        <table class="highlight">
+            <thead>
+                <tr>
+                    <th># Pregunta</th>
+                    <th>Pregunta</th>
+                    <th>Opciones</th>
+                    <th>Respuesta Correcta</th>
+                </tr>
+            </thead>
+            <tbody id="tablaPreguntas">
+                <!-- Aquí se agregarán las preguntas dinámicamente -->
+            </tbody>
+        </table>
+
+        <button id="guardarExamen" type="button">Guardar Examen</button>
+        <a href="#" id="regresarBtn" class="button-back">Regresar</a>
+    </div>
+
+    <script>
+        // Obtener el classId de la URL
+        const classId = new URLSearchParams(window.location.search).get('classId');
+
+        // Asignar el evento al botón de regresar
+        document.getElementById('regresarBtn').addEventListener('click', function () {
+            if (confirm('¿Está seguro de que desea salir? Los cambios no guardados se perderán.')) {
+                // Redirige a la página CrearExamenes, asegurándose de pasar el classId en la URL
+                window.location.href = `Crearexamenes.html?classId=${classId}`;
+            }
+        });
+    </script>
+    <!-- Importar Materialize JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Importar los módulos de Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.1.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, setDoc, doc } from "https://www.gstatic.com/firebasejs/9.1.0/firebase-firestore.js";
+        import { getAuth } from "https://www.gstatic.com/firebasejs/9.1.0/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBLwvUz_7V6rAcDrAEkpb2PqMuxbSFBo5I",
+            authDomain: "cuentas-ddcbc.firebaseapp.com",
+            projectId: "cuentas-ddcbc",
+            storageBucket: "cuentas-ddcbc.appspot.com",
+            messagingSenderId: "416491681259",
+            appId: "1:416491681259:web:41697ff964d1acede8d5ae"
+        };
+
+        // Inicializa Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        console.log("Class ID obtenido:", classId); // Esto ayudará a verificar que el valor se obtenga correctamente
+
+        // Generar y establecer la clave del examen
+        const claveExamen = `${Date.now()}`;
+        document.getElementById('claveExamen').value = claveExamen;
+
+        document.getElementById('agregarInciso').addEventListener('click', function () {
+            const respuestasContainer = document.getElementById('respuestasContainer');
+            const totalRespuestas = respuestasContainer.getElementsByClassName('respuesta').length;
+            const nuevaLetra = String.fromCharCode(65 + totalRespuestas);
+
+            const nuevaRespuesta = document.createElement('div');
+            nuevaRespuesta.classList.add('respuesta');
+            nuevaRespuesta.innerHTML = `
+        <label>
+            <input type="radio" name="respuestaCorrecta" value="${nuevaLetra}" required />
+            <span>Opción ${nuevaLetra}</span>
+        </label>
+        <input type="text" required placeholder="Respuesta ${nuevaLetra}" style="flex: 1; margin-left: 10px;">
+        <button type="button" class="eliminar-inciso">Eliminar</button>
+    `;
+
+            // Añadir el evento para eliminar el inciso
+            nuevaRespuesta.querySelector('.eliminar-inciso').addEventListener('click', function () {
+                respuestasContainer.removeChild(nuevaRespuesta);
+            });
+
+            // Añadir el nuevo inciso al contenedor de respuestas
+            respuestasContainer.appendChild(nuevaRespuesta);
+        });
+
+
+        document.getElementById('preguntaForm').addEventListener('submit', async function (event) {
+            event.preventDefault();
+
+            const pregunta = document.getElementById('pregunta').value;
+            const respuestas = document.querySelectorAll('#respuestasContainer .respuesta');
+            let opcionesTexto = '';
+            let respuestaCorrecta = '';
+            const opciones = [];
+
+            respuestas.forEach((respuesta, index) => {
+                const letra = String.fromCharCode(65 + index);
+                const texto = respuesta.querySelector('input[type="text"]').value;
+                opcionesTexto += `${letra}: ${texto}<br>`;
+                opciones.push({ letra: letra, texto: texto });
+
+                const radio = respuesta.querySelector('input[type="radio"]');
+                if (radio.checked) {
+                    respuestaCorrecta = letra;
+                }
+            });
+
+            const tablaPreguntas = document.getElementById('tablaPreguntas');
+            const nuevaFila = document.createElement('tr');
+            nuevaFila.innerHTML = `
+                <td>${tablaPreguntas.rows.length + 1}</td>
+                <td>${pregunta}</td>
+                <td>${opcionesTexto}</td>
+                <td>${respuestaCorrecta}</td>
+            `;
+
+            tablaPreguntas.appendChild(nuevaFila);
+
+            // Guardar la pregunta en la colección 'preguntas' en Firebase
+            try {
+                const user = auth.currentUser;
+                if (!user) {
+                    alert('Debes iniciar sesión para guardar la pregunta.');
+                    return;
+                }
+
+                await setDoc(doc(db, 'preguntas', `${claveExamen}-${tablaPreguntas.rows.length}`), {
+                    claveExamen: claveExamen,
+                    duracionExamen: document.getElementById('duracionExamen').value,
+                    fechaExamen: document.getElementById('fechaExamen').value,
+                    horaExamen: document.getElementById('horaExamen').value,
+                    nombreExamen: document.getElementById('nombreExamen').value,
+                    opciones: opciones.reduce((acc, curr) => ({ ...acc, [curr.letra]: curr.texto }), {}),
+                    pregunta: pregunta,
+                    respuestaCorrecta: respuestaCorrecta,
+                    userId: user.uid, // Guardar el UID del usuario
+                    classId: classId // Guardar el ID de la clase
+                });
+                console.log('Pregunta guardada en la base de datos');
+            } catch (error) {
+                console.error('Error al guardar la pregunta: ', error);
+            }
+
+            document.getElementById('preguntaForm').reset();
+            document.getElementById('respuestasContainer').innerHTML = '';
+        });
+
+        document.getElementById('guardarExamen').addEventListener('click', async function () {
+            const nombreExamen = document.getElementById('nombreExamen').value;
+            const fechaExamen = document.getElementById('fechaExamen').value;
+            const horaExamen = document.getElementById('horaExamen').value;
+            const duracionExamen = document.getElementById('duracionExamen').value;
+
+            const user = auth.currentUser;
+            if (!user) {
+                alert('Debes iniciar sesión para guardar el examen.');
+                return;
+            }
+
+            if (!classId) {
+                alert('El classId no está presente. Asegúrate de acceder desde la página correcta.');
+                return;
+            }
+
+            const preguntas = [];
+            const filasPreguntas = document.querySelectorAll('#tablaPreguntas tr');
+            filasPreguntas.forEach((fila) => {
+                const columnas = fila.querySelectorAll('td');
+                const opcionesArray = columnas[2].innerHTML.split('<br>').filter(op => op.trim() !== '').map(op => {
+                    const [letra, texto] = op.split(': ');
+                    return { letra: letra.trim(), texto: texto.trim() };
+                });
+                const pregunta = {
+                    numero: columnas[0].innerText,
+                    texto: columnas[1].innerText,
+                    opciones: opcionesArray,
+                    respuestaCorrecta: columnas[3].innerText
+                };
+                preguntas.push(pregunta);
+            });
+
+            if (!nombreExamen || !fechaExamen || !horaExamen || !duracionExamen || preguntas.length === 0) {
+                alert('Por favor, complete todos los campos del examen y agregue al menos una pregunta.');
+                return;
+            }
+
+            try {
+                await setDoc(doc(db, 'examenes', claveExamen), {
+                    claveExamen: claveExamen,
+                    nombreExamen: nombreExamen,
+                    fechaExamen: fechaExamen,
+                    horaExamen: horaExamen,
+                    duracionExamen: duracionExamen,
+                    preguntas: preguntas,
+                    userId: user.uid, // Guardar el UID del usuario
+                    classId: classId // Guardar el ID de la clase
+                });
+
+                alert('Examen guardado exitosamente');
+            } catch (error) {
+                console.error('Error al guardar el examen: ', error);
+                alert(`Error al guardar el examen: ${error.message}`);
+            }
+        });
+    </script>
+</body>
+
+</html>
