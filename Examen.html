@@ -247,7 +247,7 @@
         document.getElementById('regresarBtn').addEventListener('click', function () {
             if (confirm('¿Está seguro de que desea salir? Los cambios no guardados se perderán.')) {
                 // Redirige a la página CrearExamenes, asegurándose de pasar el classId en la URL
-                window.location.href = `Crearexamenes.html?classId=${classId}`;
+                window.location.href = `CrearExamenes.html?classId=${classId}`;
             }
         });
     </script>
@@ -307,72 +307,92 @@
 
 
         document.getElementById('preguntaForm').addEventListener('submit', async function (event) {
-    event.preventDefault();
+            event.preventDefault();
 
-    // Verificar si hay incisos agregados
-    const respuestas = document.querySelectorAll('#respuestasContainer .respuesta');
-    if (respuestas.length === 0) {
-        alert('Por favor, agregue al menos un inciso antes de guardar la pregunta.');
-        return;
-    }
+            const pregunta = document.getElementById('pregunta').value.trim();
+            const respuestas = document.querySelectorAll('#respuestasContainer .respuesta');
+            let opcionesTexto = '';
+            let respuestaCorrecta = '';
+            const opciones = [];
 
-    const pregunta = document.getElementById('pregunta').value;
-    let opcionesTexto = '';
-    let respuestaCorrecta = '';
-    const opciones = [];
+            // Validación de campos vacíos
+            if (!pregunta) {
+                alert('Por favor, ingrese la pregunta.');
+                return;
+            }
 
-    respuestas.forEach((respuesta, index) => {
-        const letra = String.fromCharCode(65 + index);
-        const texto = respuesta.querySelector('input[type="text"]').value;
-        opcionesTexto += `${letra}: ${texto}<br>`;
-        opciones.push({ letra: letra, texto: texto });
+            if (respuestas.length === 0) {
+                alert('Por favor, agregue al menos un inciso.');
+                return;
+            }
 
-        const radio = respuesta.querySelector('input[type="radio"]');
-        if (radio.checked) {
-            respuestaCorrecta = letra;
-        }
-    });
+            let emptyAnswer = false;
+            respuestas.forEach((respuesta, index) => {
+                const letra = String.fromCharCode(65 + index);
+                const texto = respuesta.querySelector('input[type="text"]').value.trim();
 
-    const tablaPreguntas = document.getElementById('tablaPreguntas');
-    const nuevaFila = document.createElement('tr');
-    nuevaFila.innerHTML = `
-        <td>${tablaPreguntas.rows.length + 1}</td>
-        <td>${pregunta}</td>
-        <td>${opcionesTexto}</td>
-        <td>${respuestaCorrecta}</td>
-    `;
+                if (!texto) {
+                    emptyAnswer = true;
+                }
 
-    tablaPreguntas.appendChild(nuevaFila);
+                opcionesTexto += `${letra}: ${texto}<br>`;
+                opciones.push({ letra: letra, texto: texto });
 
-    // Guardar la pregunta en la colección 'preguntas' en Firebase
-    try {
-        const user = auth.currentUser;
-        if (!user) {
-            alert('Debes iniciar sesión para guardar la pregunta.');
-            return;
-        }
+                const radio = respuesta.querySelector('input[type="radio"]');
+                if (radio.checked) {
+                    respuestaCorrecta = letra;
+                }
+            });
 
-        await setDoc(doc(db, 'preguntas', `${claveExamen}-${tablaPreguntas.rows.length}`), {
-            claveExamen: claveExamen,
-            duracionExamen: document.getElementById('duracionExamen').value,
-            fechaExamen: document.getElementById('fechaExamen').value,
-            horaExamen: document.getElementById('horaExamen').value,
-            nombreExamen: document.getElementById('nombreExamen').value,
-            opciones: opciones.reduce((acc, curr) => ({ ...acc, [curr.letra]: curr.texto }), {}),
-            pregunta: pregunta,
-            respuestaCorrecta: respuestaCorrecta,
-            userId: user.uid, // Guardar el UID del usuario
-            classId: classId // Guardar el ID de la clase
+            if (emptyAnswer) {
+                alert('Por favor, complete todos los incisos.');
+                return;
+            }
+
+            if (!respuestaCorrecta) {
+                alert('Por favor, seleccione la respuesta correcta.');
+                return;
+            }
+
+            const tablaPreguntas = document.getElementById('tablaPreguntas');
+            const nuevaFila = document.createElement('tr');
+            nuevaFila.innerHTML = `
+                <td>${tablaPreguntas.rows.length + 1}</td>
+                <td>${pregunta}</td>
+                <td>${opcionesTexto}</td>
+                <td>${respuestaCorrecta}</td>
+            `;
+
+            tablaPreguntas.appendChild(nuevaFila);
+
+            // Guardar la pregunta en la colección 'preguntas' en Firebase
+            try {
+                const user = auth.currentUser;
+                if (!user) {
+                    alert('Debes iniciar sesión para guardar la pregunta.');
+                    return;
+                }
+
+                await setDoc(doc(db, 'preguntas', `${claveExamen}-${tablaPreguntas.rows.length}`), {
+                    claveExamen: claveExamen,
+                    duracionExamen: document.getElementById('duracionExamen').value,
+                    fechaExamen: document.getElementById('fechaExamen').value,
+                    horaExamen: document.getElementById('horaExamen').value,
+                    nombreExamen: document.getElementById('nombreExamen').value,
+                    opciones: opciones.reduce((acc, curr) => ({ ...acc, [curr.letra]: curr.texto }), {}),
+                    pregunta: pregunta,
+                    respuestaCorrecta: respuestaCorrecta,
+                    userId: user.uid, // Guardar el UID del usuario
+                    classId: classId // Guardar el ID de la clase
+                });
+                console.log('Pregunta guardada en la base de datos');
+            } catch (error) {
+                console.error('Error al guardar la pregunta: ', error);
+            }
+
+            document.getElementById('preguntaForm').reset();
+            document.getElementById('respuestasContainer').innerHTML = '';
         });
-        console.log('Pregunta guardada en la base de datos');
-    } catch (error) {
-        console.error('Error al guardar la pregunta: ', error);
-    }
-
-    document.getElementById('preguntaForm').reset();
-    document.getElementById('respuestasContainer').innerHTML = '';
-});
-
 
         document.getElementById('guardarExamen').addEventListener('click', async function () {
             const nombreExamen = document.getElementById('nombreExamen').value;
