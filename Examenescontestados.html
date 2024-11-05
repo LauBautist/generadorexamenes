@@ -52,6 +52,26 @@
             background-color: #eac4d5;
             color: #8b4363;
         }
+        .button-back {
+            background-color: #b8e0d2;
+            color: #013220;
+            font-weight: bold;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+            transition: background-color 0.3s;
+            display: block;
+            width: fit-content;
+            margin: 20px auto 0;
+        }
+
+        .button-back:hover {
+            background-color: #a2c7c5;
+        }
     </style>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
@@ -172,6 +192,9 @@
                 <!-- Aquí se agregarán dinámicamente los resultados -->
             </tbody>
         </table>
+
+        <a href="Clases.html" class="button-back">Regresar</a>
+        
     </div>
 </body>
 
