@@ -39,13 +39,14 @@
             font-weight: bold;
         }
         .container {
-            max-width: 800px;
+            max-width: 600px;
             margin: 20px auto;
             background-color: white;
             padding: 25px;
             border-radius: 10px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
             text-align: center;
+        
         }
         .motivational-text {
             color: #7b9daf;
@@ -55,8 +56,12 @@
         }
         .chart-container {
             margin-top: 30px;
-            padding: 20px;
+            padding: 50px;
             background-color: white;
+            margin: 20px auto; /* Centra horizontalmente el contenedor */
+            max-width: 800px;
+            width: 90%; 
+            
             border-radius: 10px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
         }
@@ -64,9 +69,13 @@
             color: #d6156c;
             font-size: 22px;
             font-weight: 600;
+            text-align: center;
         }
         canvas {
-            margin-top: 20px;
+            width: 100%;
+        max-width: 600px; 
+        height: auto; 
+        margin: 0 auto;
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -172,3 +181,4 @@
     </script>
 </body>
 </html>
+
