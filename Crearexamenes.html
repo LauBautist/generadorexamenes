@@ -447,27 +447,36 @@
         }
 
         async function eliminarExamen(claveExamen) {
-            const confirmacion = confirm("¿Estás seguro de que quieres eliminar este examen y todas sus preguntas?");
-            if (confirmacion) {
-                const examQuery = query(collection(db, "examenes"), where("claveExamen", "==", claveExamen));
-                const examSnapshot = await getDocs(examQuery);
-                examSnapshot.forEach(async (docSnap) => {
-                    const examRef = doc(db, "examenes", docSnap.id);
-                    await deleteDoc(examRef);
-                });
+    const confirmacion = confirm("¿Estás seguro de que quieres eliminar este examen, todas sus preguntas y los resultados asociados?");
+    if (confirmacion) {
+        // Eliminar el examen de la colección "examenes"
+        const examQuery = query(collection(db, "examenes"), where("claveExamen", "==", claveExamen));
+        const examSnapshot = await getDocs(examQuery);
+        examSnapshot.forEach(async (docSnap) => {
+            const examRef = doc(db, "examenes", docSnap.id);
+            await deleteDoc(examRef);
+        });
 
-                const preguntasQuery = query(collection(db, "preguntas"), where("claveExamen", "==", claveExamen));
-                const preguntasSnapshot = await getDocs(preguntasQuery);
-                preguntasSnapshot.forEach(async (docSnap) => {
-                    const preguntaRef = doc(db, "preguntas", docSnap.id);
-                    await deleteDoc(preguntaRef);
-                });
+        // Eliminar preguntas asociadas de la colección "preguntas"
+        const preguntasQuery = query(collection(db, "preguntas"), where("claveExamen", "==", claveExamen));
+        const preguntasSnapshot = await getDocs(preguntasQuery);
+        preguntasSnapshot.forEach(async (docSnap) => {
+            const preguntaRef = doc(db, "preguntas", docSnap.id);
+            await deleteDoc(preguntaRef);
+        });
 
-                alert('Examen y todas sus preguntas eliminados correctamente');
-                cargarExamenes(auth.currentUser.uid);
-            }
-        }
+        // Eliminar resultados asociados de la colección "ExamenResuelto" usando "claveExamen"
+        const resultadosQuery = query(collection(db, "ExamenResuelto"), where("claveExamen", "==", claveExamen));
+        const resultadosSnapshot = await getDocs(resultadosQuery);
+        resultadosSnapshot.forEach(async (docSnap) => {
+            const resultadoRef = doc(db, "ExamenResuelto", docSnap.id);
+            await deleteDoc(resultadoRef);
+        });
 
+        alert('Examen, sus preguntas y los resultados asociados han sido eliminados correctamente.');
+        cargarExamenes(auth.currentUser.uid); // Recargar la lista de exámenes
+    }
+}
         document.getElementById('agregarExamenBtn').addEventListener('click', function () {
             const classId = new URLSearchParams(window.location.search).get('classId');
             if (classId) {
