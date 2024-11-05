@@ -30,6 +30,12 @@
             font-weight: bold;
         }
 
+        .filter-container {
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
@@ -46,45 +52,13 @@
             background-color: #eac4d5;
             color: #8b4363;
         }
-
-        .input-field {
-            margin-bottom: 20px;
-        }
-
-        #searchInput {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-size: 16px;
-        }
-
-        .button-back {
-            display: inline-block;
-            background-color: #a3d2ca;
-            color: #004d40;
-            text-align: center;
-            padding: 10px 20px;
-            text-decoration: none;
-            border-radius: 8px;
-            font-weight: bold;
-            margin-top: 20px;
-            transition: background-color 0.3s ease;
-        }
-
-        .button-back:hover {
-            background-color: #8ec3b0;
-        }
-
-        .button-container {
-            text-align: center;
-            margin-top: 20px;
-        }
     </style>
-     <script type="module">
+    <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
         import { getFirestore, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-auth.js";
 
+        // Configuración de Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyBLwvUz_7V6rAcDrAEkpb2PqMuxbSFBo5I",
             authDomain: "cuentas-ddcbc.firebaseapp.com",
@@ -97,77 +71,94 @@
         // Inicializar Firebase
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const auth = getAuth();
 
-        // Obtener resultados de exámenes
-        async function obtenerResultados() {
-            try {
-                const examenResueltoCollection = collection(db, "ExamenResuelto");
-                const resultadosQuery = query(
-                    examenResueltoCollection,
-                    where("examenCompletado", "==", true)
-                );
+        // Cargar clases en el combo box usando `classId` para obtener el nombre de cada clase
+        async function cargarClases(userId) {
+            const selectElement = document.getElementById('filterSelect');
+            selectElement.innerHTML = '<option value="" disabled selected>Seleccione una clase</option>'; // Reiniciar el combo box
 
-                const querySnapshot = await getDocs(resultadosQuery);
-                const resultadosExamenes = []; // Reiniciar lista de resultados
+            // Obtener los documentos de clases asociadas al usuario
+            const clasesQuery = query(collection(db, "clases"), where("userId", "==", userId));
+            const querySnapshot = await getDocs(clasesQuery);
 
+            if (querySnapshot.empty) {
+                console.log("No se encontraron clases para este usuario.");
+            } else {
                 querySnapshot.forEach((doc) => {
-                    resultadosExamenes.push(doc.data());
-                });
+                    const clase = doc.data();
+                    console.log("Clase encontrada:", clase);
 
-                mostrarResultados(resultadosExamenes);
-            } catch (error) {
-                console.error("Error al buscar resultados:", error);
-                alert("Ocurrió un error al obtener los resultados. Intenta de nuevo.");
+                    const option = document.createElement('option');
+                    option.value = doc.id;  // Usar el ID del documento como valor único
+                    option.textContent = clase.name || "Sin Nombre"; // Usar `name` para el nombre de la clase o "Sin Nombre" si no está definido
+                    selectElement.appendChild(option);
+                });
             }
+
+            // Inicializar el combo box para Materialize
+            M.FormSelect.init(selectElement);
         }
 
-        // Mostrar los resultados en la tabla
-        function mostrarResultados(resultados) {
+        // Obtener los resultados de los exámenes filtrados por clase
+        async function obtenerResultados(classId) {
+            const examenResueltoCollection = collection(db, "ExamenResuelto");
+            const queryRef = query(examenResueltoCollection, where("classId", "==", classId));
+
+            const querySnapshot = await getDocs(queryRef);
             const resultadosContainer = document.getElementById('resultadosContainer');
-            resultadosContainer.innerHTML = ''; // Limpiar tabla
+            resultadosContainer.innerHTML = ''; // Limpiar resultados previos
 
-            if (resultados.length === 0) {
-                resultadosContainer.innerHTML = `<tr><td colspan="5" style="text-align: center;">No se encontraron resultados.</td></tr>`;
-                return;
-            }
-
-            resultados.forEach((data) => {
+            querySnapshot.forEach((doc) => {
+                const data = doc.data();
                 const fila = document.createElement('tr');
                 fila.innerHTML = `
-                    <td>${data.fullName || 'Desconocido'}</td>
-                    <td>${data.idExamen || 'Sin ID'}</td>
-                    <td>${data.calificacion || 'N/A'}</td>
-                    <td>${data.aciertos || 'N/A'}</td>
-                    <td>${data.fechaHoraTermina ? new Date(data.fechaHoraTermina).toLocaleString() : 'N/A'}</td>
+                    <td>${data.fullName}</td>
+                    <td>${data.idExamen}</td>
+                    <td>${data.calificacion}</td>
+                    <td>${data.aciertos}</td>
+                    <td>${new Date(data.fechaHoraTermina).toLocaleString()}</td>
                 `;
                 resultadosContainer.appendChild(fila);
             });
         }
 
-        // Filtrar resultados
-        function filtrarResultados() {
-            const input = document.getElementById('searchInput').value.toLowerCase();
-            const resultadosFiltrados = resultadosExamenes.filter((resultado) =>
-                resultado.idExamen.toLowerCase().includes(input)
-            );
-            mostrarResultados(resultadosFiltrados);
-        }
+        // Comprobar autenticación y cargar clases
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                console.log("Usuario autenticado:", user.uid);
+                cargarClases(user.uid);  // Cargar las clases del usuario autenticado
 
-        // Evento para obtener resultados al cargar el DOM
-        document.addEventListener('DOMContentLoaded', () => {
-            obtenerResultados();
-            document.getElementById('searchInput').addEventListener('input', filtrarResultados);
+                // Agregar evento de cambio al combo box
+                document.getElementById('filterSelect').addEventListener('change', (e) => {
+                    const selectedClassId = e.target.value;
+                    obtenerResultados(selectedClassId); // Filtrar resultados por la clase seleccionada
+                });
+            } else {
+                window.location.href = 'Login.html'; // Redirige al login si no hay usuario autenticado
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const elems = document.querySelectorAll('select');
+            M.FormSelect.init(elems);
         });
     </script>
 </head>
+
 <body>
     <div class="container">
         <h1>Resultados de Exámenes</h1>
-        <label for="searchInput">Buscar Examen por nombre para saber la calificación: </label>
-        <div class="input-field">
-            <input type="text" id="searchInput" placeholder="Buscar por nombre de examen..." class="validate">
+
+        <!-- Combo Box para seleccionar clases -->
+        <div class="filter-container">
+            <label for="filterSelect">Selecciona una clase:</label>
+            <select id="filterSelect" class="browser-default" style="margin-left: 10px;">
+                <option value="" disabled selected>Seleccione una clase</option>
+            </select>
         </div>
-        <table class="highlight responsive-table">
+
+        <table>
             <thead>
                 <tr>
                     <th>Nombre</th>
@@ -181,11 +172,7 @@
                 <!-- Aquí se agregarán dinámicamente los resultados -->
             </tbody>
         </table>
-        <div class="button-container">
-            <a href="Clases.html" class="button-back">Regresar</a>
-        </div>
     </div>
 </body>
 
 </html>
-
