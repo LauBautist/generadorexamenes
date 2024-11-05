@@ -257,24 +257,23 @@
         }
 
         .button-back {
-    background-color: #b8e0d2;
-    color: #013220;
-    font-weight: bold;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    font-size: 1em;
-    cursor: pointer;
-    text-align: center;
-    text-decoration: none;
-    transition: background-color 0.3s;
-    flex-shrink: 0;
-}
+            background-color: #b8e0d2;
+            color: #013220;
+            font-weight: bold;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+            transition: background-color 0.3s;
+            flex-shrink: 0;
+        }
 
-.button-back:hover {
-    background-color: #a2c7c5;
-}
-
+        .button-back:hover {
+            background-color: #a2c7c5;
+        }
     </style>
     <script type="module">
         import { getAuth, signOut, updatePassword } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-auth.js";
@@ -532,26 +531,44 @@
 
 
         async function deleteClass(classId) {
+            // Consultar los exámenes asociados con la clase
             const examQuery = query(collection(db, "examenes"), where("classId", "==", classId));
             const examSnapshot = await getDocs(examQuery);
 
+            // Crear una lista de promesas para eliminar exámenes y sus datos asociados
             const examDeletePromises = examSnapshot.docs.map(async (examDoc) => {
                 const claveExamen = examDoc.data().claveExamen;
 
+                // 1. Eliminar todas las preguntas relacionadas con este examen
                 const preguntasQuery = query(collection(db, "preguntas"), where("claveExamen", "==", claveExamen));
                 const preguntasSnapshot = await getDocs(preguntasQuery);
-                const preguntasDeletePromises = preguntasSnapshot.docs.map((preguntaDoc) => deleteDoc(doc(db, "preguntas", preguntaDoc.id)));
+                const preguntasDeletePromises = preguntasSnapshot.docs.map((preguntaDoc) =>
+                    deleteDoc(doc(db, "preguntas", preguntaDoc.id))
+                );
                 await Promise.all(preguntasDeletePromises);
 
+                // 2. Eliminar todos los registros en ExamenResuelto relacionados con este examen
+                const examenResueltoQuery = query(collection(db, "ExamenResuelto"), where("claveExamen", "==", claveExamen));
+                const examenResueltoSnapshot = await getDocs(examenResueltoQuery);
+                const examenResueltoDeletePromises = examenResueltoSnapshot.docs.map((resueltoDoc) =>
+                    deleteDoc(doc(db, "ExamenResuelto", resueltoDoc.id))
+                );
+                await Promise.all(examenResueltoDeletePromises);
+
+                // 3. Eliminar el examen en sí mismo
                 return deleteDoc(doc(db, "examenes", examDoc.id));
             });
 
+            // Esperar a que todos los exámenes y sus datos asociados se eliminen
             await Promise.all(examDeletePromises);
 
+            // Finalmente, eliminar la clase de la colección "clases"
             await deleteDoc(doc(db, "clases", classId));
 
+            // Llamar a la función para recargar la lista de clases después de la eliminación
             loadClasses();
         }
+
 
         async function editClass(classId, currentName) {
             const newName = prompt("Editar nombre de la clase:", currentName);
