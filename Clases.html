@@ -38,7 +38,6 @@
             color: #d6156c !important;
         }
 
-
         .input-container {
             display: flex;
             align-items: center;
@@ -53,9 +52,7 @@
 
         .button-add {
             background-color: #b8e0d2;
-            /* Color de fondo del botón */
             color: #013220;
-            /* Cambiar el color del texto al verde */
             font-weight: bold;
             padding: 10px 20px;
             border: none;
@@ -67,7 +64,6 @@
             transition: background-color 0.3s;
             flex-shrink: 0;
         }
-
 
         .button-add:hover {
             background-color: #a2c7c5;
@@ -118,15 +114,12 @@
             position: relative;
         }
 
-        /* Estilo base para los íconos de clase */
         .class-icon {
             width: 80px;
             height: 80px;
             border-radius: 5px;
             background-color: #ffffff;
-            /* Fondo transparente */
             color: #396a8f;
-            /* Color del ícono */
             display: flex;
             align-items: center;
             justify-content: center;
@@ -134,66 +127,44 @@
             margin-bottom: 15px;
             cursor: pointer;
             border: none;
-            /* Sin borde */
             box-shadow: none;
-            /* Sin sombra */
         }
 
-        /* Mantener el color azul claro al hacer hover */
         .class-icon:hover {
             background-color: transparent;
-            /* Fondo transparente */
             color: #95b8d1;
-            /* Color azulito al pasar el ratón */
             border: none;
-            /* Sin borde */
             box-shadow: none;
-            /* Sin sombra */
         }
 
-        /* Evitar el color verde cuando se hace clic o se enfoca el ícono */
         .class-icon:focus,
         .class-icon:active {
             background-color: transparent !important;
-            /* Sin fondo al enfocarse o activarse */
             color: #396a8f !important;
-            /* Mantener el color del ícono */
             outline: none !important;
-            /* Sin borde de enfoque */
             box-shadow: none !important;
-            /* Sin sombra al enfocarse */
         }
 
-        /* También aplica para los botones de icono en la clase */
         .icon-button {
             background: none;
             border: none;
             cursor: pointer;
             font-size: 1.5em;
             color: #396a8f;
-            /* Color consistente con el ícono */
             transition: color 0.3s;
         }
 
-        /* Cambio al azulito en hover */
         .icon-button:hover {
             color: #95b8d1;
-            /* Cambia al azulito al pasar el ratón */
         }
 
-        /* Evitar cambios de color en focus o active */
         .icon-button:focus,
         .icon-button:active {
             color: #396a8f !important;
-            /* Mantener el mismo color del ícono */
             background: none !important;
-            /* Fondo transparente */
             outline: none !important;
-            /* Sin borde de enfoque */
             box-shadow: none !important;
-            /* Sin sombra */
         }
-
 
         .class-name {
             font-size: 1.2em;
@@ -206,19 +177,6 @@
             display: flex;
             justify-content: center;
             gap: 15px;
-        }
-
-        .icon-button {
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 1.5em;
-            color: #396a8f;
-            transition: color 0.3s;
-        }
-
-        .icon-button:hover {
-            color: #95b8d1;
         }
 
         .note {
@@ -272,20 +230,15 @@
             background-color: #e08080;
         }
 
-        /* Estilo del botón dentro del modal */
         .modal-footer .btn,
         .modal-content button {
             color: #013220 !important;
-            /* Cambia el color del texto al verde que solicitaste */
             font-weight: bold;
-            /* Añadir negrita si se requiere */
         }
 
-        /* Estilo al pasar el cursor sobre el botón dentro del modal */
         .modal-footer .btn:hover,
         .modal-content button:hover {
             background-color: #a2c7c5;
-            /* Mantén el color de fondo que desees */
         }
 
         .nav-wrapper {
@@ -297,13 +250,31 @@
         #nav-mobile.left {
             display: flex;
             gap: 20px;
-            /* Espacio entre los elementos de la izquierda */
         }
 
         ul.right {
             margin-right: 20px;
-            /* Ajuste opcional para el margen derecho */
         }
+
+        .button-back {
+    background-color: #b8e0d2;
+    color: #013220;
+    font-weight: bold;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    font-size: 1em;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    transition: background-color 0.3s;
+    flex-shrink: 0;
+}
+
+.button-back:hover {
+    background-color: #a2c7c5;
+}
+
     </style>
     <script type="module">
         import { getAuth, signOut, updatePassword } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-auth.js";
@@ -353,6 +324,7 @@
                 <input type="text" id="className" placeholder="Nombre de la clase a crear">
             </div>
             <a href="#" id="addClassButton" class="button-add">Agregar Clase</a>
+            <a id="verCalificacionesBtn" href="#" class="button-back" style="margin-left: 10px;">Ver Calificaciones</a>
         </div>
 
         <div id="classesContainer" class="class-grid">
@@ -444,8 +416,8 @@
             if (className) {
                 const user = auth.currentUser;
                 const docRef = await addDoc(classesCollection, { name: className, userId: user.uid });
-                const classId = docRef.id; // El ID del documento es el classId
-                await updateDoc(docRef, { classId: classId }); // Guardar el classId en el documento
+                const classId = docRef.id;
+                await updateDoc(docRef, { classId: classId });
                 document.getElementById('className').value = '';
                 loadClasses();
             }
@@ -502,6 +474,7 @@
                 if (classData.userId === user.uid) {
                     const classCard = document.createElement('div');
                     classCard.className = 'class-card';
+                    classCard.setAttribute('data-class-id', classData.classId); // Agregar el atributo data-class-id
 
                     const classIcon = document.createElement('div');
                     classIcon.className = 'class-icon';
@@ -557,35 +530,28 @@
             });
         }
 
+
         async function deleteClass(classId) {
-            // Eliminar los exámenes relacionados a la clase
             const examQuery = query(collection(db, "examenes"), where("classId", "==", classId));
             const examSnapshot = await getDocs(examQuery);
 
-            // Eliminar todos los exámenes asociados a la clase
             const examDeletePromises = examSnapshot.docs.map(async (examDoc) => {
                 const claveExamen = examDoc.data().claveExamen;
 
-                // Eliminar las preguntas relacionadas al examen
                 const preguntasQuery = query(collection(db, "preguntas"), where("claveExamen", "==", claveExamen));
                 const preguntasSnapshot = await getDocs(preguntasQuery);
                 const preguntasDeletePromises = preguntasSnapshot.docs.map((preguntaDoc) => deleteDoc(doc(db, "preguntas", preguntaDoc.id)));
                 await Promise.all(preguntasDeletePromises);
 
-                // Eliminar el examen
                 return deleteDoc(doc(db, "examenes", examDoc.id));
             });
 
-            // Esperar a que todos los exámenes y sus preguntas sean eliminados
             await Promise.all(examDeletePromises);
 
-            // Ahora eliminar la clase
             await deleteDoc(doc(db, "clases", classId));
 
-            // Recargar las clases
             loadClasses();
         }
-
 
         async function editClass(classId, currentName) {
             const newName = prompt("Editar nombre de la clase:", currentName);
@@ -610,6 +576,21 @@
                 console.error("Error al cargar los datos del usuario: ", error);
             }
         }
+
+        document.getElementById('verCalificacionesBtn').addEventListener('click', function () {
+            const selectedClassCard = document.querySelector('.class-card'); // Puedes mejorar esto para seleccionar la tarjeta específica
+            if (selectedClassCard) {
+                const classId = selectedClassCard.getAttribute('data-class-id');
+                if (classId) {
+                    window.location.href = `Examenescontestados.html?classId=${classId}`;
+                } else {
+                    alert('No se pudo obtener el ID de la clase. Por favor, vuelva a intentarlo.');
+                }
+            } else {
+                alert('Por favor, selecciona una clase primero.');
+            }
+        });
+
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
 </body>
