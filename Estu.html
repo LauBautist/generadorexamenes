@@ -94,6 +94,7 @@
             border-radius: 8px;
             padding: 20px;
             margin-top: 20px;
+            margin: 20px auto;
             width: 100%;
             max-width: 800px;
         }
@@ -151,7 +152,7 @@
         <span>Lista de Exámenes</span>
         <div>
             <a href="graficasEstudiantes.html">Grafica</a>
-            <a href="#"onclick="generarConstancia()">Constancia</a>
+            <a href="#" onclick="generarConstancia()">Constancia</a>
             <a href="index.html">Cerrar Sesión</a>
         </div>
     </div>
@@ -183,8 +184,7 @@
         <div id="timer">Tiempo restante: <span id="tiempoRestante"></span></div>
         <form id="examenForm">
             <div id="preguntas"></div>
-            <button type="button" id="guardarButton" class="examen-button"
-                onclick="guardarRespuestas()">Guardar</button>
+            <button type="button" id="guardarButton" class="examen-button" onclick="guardarRespuestas()">Guardar</button>
         </form>
     </div>
 
@@ -215,6 +215,7 @@
         let totalPreguntas = 0;
         let timerInterval;
         let examenIniciado = false;
+        let currentClassId = "";  // Variable para almacenar el classId actual
 
         async function buscarExamenesPorClave(clave) {
             const examenesContainer = document.querySelector('#examenesContainer tbody');
@@ -234,7 +235,8 @@
                                 fecha: data.fechaExamen,
                                 hora: data.horaExamen,
                                 duracion: data.duracionExamen,
-                                claveExamen: clave
+                                claveExamen: clave,
+                                classId: data.classId // Suponiendo que `classId` está en `preguntas`
                             };
                         }
                     }
@@ -251,7 +253,7 @@
                             <td>${data.fecha}</td>
                             <td>${data.hora}</td>
                             <td>${data.duracion}</td>
-                            <td><button class="examen-button" onclick="mostrarPreguntas('${data.nombreExamen}', '${data.claveExamen}', ${data.duracion})">Comenzar</button></td>
+                            <td><button class="examen-button" onclick="mostrarPreguntas('${data.nombreExamen}', '${data.claveExamen}', ${data.duracion}, '${data.classId}')">Comenzar</button></td>
                             <td><button class="examen-button" onclick="verResultados('${data.nombreExamen}', '${data.claveExamen}')">Resultados</button></td>
                         `;
                         examenesContainer.appendChild(row);
@@ -264,26 +266,27 @@
             }
         }
 
-        async function mostrarPreguntas(examenNombre, claveExamen, duracion) {
+        async function mostrarPreguntas(examenNombre, claveExamen, duracion, classId) {
+            const uidEstudiante = localStorage.getItem("alumnoId");
+            const examenDocRef = doc(db, "ExamenResuelto", `${examenNombre}_${uidEstudiante}`);
+            const examenDoc = await getDoc(examenDocRef);
+
+            // Verificar si el examen ya ha sido respondido por el usuario
+            if (examenDoc.exists()) {
+                alert("Ya has respondido este examen. No puedes responderlo de nuevo.");
+                return;
+            }
+
             if (examenIniciado) {
                 alert("El examen ya está en curso. No puedes reiniciar el tiempo.");
                 return;
             }
 
             examenIniciado = true;
+            currentClassId = classId;  // Guardar classId actual para usar en guardarRespuestas
             const preguntasDiv = document.getElementById('preguntas');
             preguntasDiv.innerHTML = '';
             document.getElementById('nombreExamen').innerText = examenNombre;
-
-            const uidEstudiante = localStorage.getItem("alumnoId");
-            const examenDocRef = doc(db, "ExamenResuelto", `${examenNombre}_${uidEstudiante}`);
-            const examenDoc = await getDoc(examenDocRef);
-
-            if (examenDoc.exists()) {
-                alert("Ya has respondido este examen. No puedes responderlo de nuevo.");
-                examenIniciado = false;
-                return;
-            }
 
             cargarPreguntas(examenNombre, claveExamen);
             iniciarTemporizador(duracion);
@@ -291,26 +294,32 @@
         }
 
         async function cargarPreguntas(examenNombre, claveExamen) {
-            const preguntasDiv = document.getElementById('preguntas');
-            const querySnapshot = await getDocs(collection(db, "preguntas"));
-            totalPreguntas = 0;
+    const preguntasDiv = document.getElementById('preguntas');
+    const querySnapshot = await getDocs(collection(db, "preguntas"));
+    totalPreguntas = 0;
 
-            querySnapshot.forEach((doc) => {
-                const data = doc.data();
-                if (data.nombreExamen === examenNombre && data.claveExamen === claveExamen) {
-                    totalPreguntas++;
-                    const preguntaDiv = document.createElement('div');
-                    preguntaDiv.className = 'pregunta';
-                    preguntaDiv.innerHTML = `
-                        <strong>${data.pregunta}</strong><br>
-                        <label><input type="radio" name="${data.pregunta}" value="A"> ${data.opciones.A}</label>
-                        <label><input type="radio" name="${data.pregunta}" value="B"> ${data.opciones.B}</label>
-                        <label><input type="radio" name="${data.pregunta}" value="C"> ${data.opciones.C}</label>
-                    `;
-                    preguntasDiv.appendChild(preguntaDiv);
-                }
-            });
+    querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        if (data.nombreExamen === examenNombre && data.claveExamen === claveExamen) {
+            totalPreguntas++;
+            const preguntaDiv = document.createElement('div');
+            preguntaDiv.className = 'pregunta';
+
+            // Crear opciones dinámicamente basadas en los datos de Firestore
+            let opcionesHTML = '';
+            for (let key in data.opciones) {
+                opcionesHTML += `<label><input type="radio" name="${data.pregunta}" value="${key}"> ${data.opciones[key]}</label><br>`;
+            }
+
+            preguntaDiv.innerHTML = `
+                <strong>${data.pregunta}</strong><br>
+                ${opcionesHTML}
+            `;
+            preguntasDiv.appendChild(preguntaDiv);
         }
+    });
+}
+
 
         function iniciarTemporizador(duracion) {
             clearInterval(timerInterval);
@@ -339,7 +348,9 @@
             const uidEstudiante = localStorage.getItem("alumnoId");
             const fullName = localStorage.getItem("fullName");
             const examenNombre = document.getElementById('nombreExamen').innerText;
-            const claveExamen = document.getElementById('claveInput').value; // Obtener la clave del examen desde el input
+            const claveExamen = document.getElementById('claveInput').value;
+            const classId = currentClassId; // Asegúrate de tener el classId almacenado en una variable
+
             for (let pregunta of preguntas) {
                 const inputs = pregunta.querySelectorAll('input[type="radio"]');
                 let seleccionada = null;
@@ -366,7 +377,8 @@
                 calificacion: calificacion,
                 aciertos: respuestasCorrectas,
                 fechaHoraTermina: new Date().toISOString(),
-                examenCompletado: true
+                examenCompletado: true,
+                classId: classId  // Guardar el classId en el documento
             });
 
             const resultadoTexto = `${respuestasCorrectas} de ${totalPreguntas} correctas. Calificación: ${calificacion}%. ¡Gracias por participar en el examen!`;
@@ -409,78 +421,42 @@
         document.getElementById("closeResultadosModal").onclick = function () {
             document.getElementById("resultadosModal").style.display = "none";
         };
+
         async function generarConstancia() {
-    const { jsPDF } = window.jspdf;
-    const uidEstudiante = localStorage.getItem("alumnoId");
-    const nombreEstudiante = localStorage.getItem("fullName") || "Estudiante";
-    if (!uidEstudiante || !nombreEstudiante) {
-        alert("No se ha encontrado información del estudiante.");
-        return;
-    }
+            const { jsPDF } = window.jspdf;
+            const uidEstudiante = localStorage.getItem("alumnoId");
+            const nombreEstudiante = localStorage.getItem("fullName") || "Estudiante";
+            if (!uidEstudiante || !nombreEstudiante) {
+                alert("No se ha encontrado información del estudiante.");
+                return;
+            }
 
-    const querySnapshot = await getDocs(collection(db, "ExamenResuelto"));
-    let totalCalificaciones = 0;
-    let numeroExamenes = 0;
+            const querySnapshot = await getDocs(collection(db, "ExamenResuelto"));
+            let totalCalificaciones = 0;
+            let numeroExamenes = 0;
 
-    querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        if (data.uid === uidEstudiante) {
-            totalCalificaciones += parseFloat(data.calificacion);
-            numeroExamenes++;
-        }
-    });
+            querySnapshot.forEach((doc) => {
+                const data = doc.data();
+                if (data.uid === uidEstudiante) {
+                    totalCalificaciones += parseFloat(data.calificacion);
+                    numeroExamenes++;
+                }
+            });
 
-    if (numeroExamenes === 0) {
-        alert("No se encontraron exámenes para este estudiante.");
-        return;
-    }
+            if (numeroExamenes === 0) {
+                alert("No se encontraron exámenes para este estudiante.");
+                return;
+            }
 
-    const promedio = (totalCalificaciones / numeroExamenes).toFixed(2);
+            const promedio = (totalCalificaciones / numeroExamenes).toFixed(2);
 
-    // Crear PDF
-    const pdf = new jsPDF();
-
-    // Cargar y añadir imágenes
-    const img1 = new Image();
-    const img2 = new Image();
-    img1.src = "tec1.png"; // Ruta de la imagen tec1.png
-    img2.src = "tec2.png"; // Ruta de la imagen tec2.png
-
-    // Esperar a que ambas imágenes se carguen
-    img1.onload = () => {
-        img2.onload = () => {
-            // Añadir las imágenes al PDF
-            pdf.addImage(img1, "PNG", 10, 5, 50, 30); // Esquina superior izquierda
-            pdf.addImage(img2, "PNG", 170, 5, 30, 33); // Esquina superior derecha
-
-            // Añadir contenido de la constancia
-            pdf.setFontSize(16);
+            const pdf = new jsPDF();
             pdf.text("Instituto Tecnológico de Chilpancingo", 20, 50);
-            pdf.setFontSize(14);
-            pdf.text("Departamento de Servicios Escolares", 20, 60);
-            pdf.setFontSize(16);
             pdf.text("CONSTANCIA DE ESTUDIOS", 20, 80);
-            pdf.setFontSize(12);
             pdf.text(`Estudiante: ${nombreEstudiante}`, 20, 100);
-            pdf.text(`Programa Académico: Ingeniería en Sistemas Computacionales`, 20, 110);
-            pdf.text(`Fecha de Emisión: ${new Date().toLocaleDateString()}`, 20, 120);
-            pdf.setFontSize(12);
-            pdf.text(
-                `El Instituto Tecnológico de Chilpancingo, por medio del presente documento, ` +
-                `hace constar que ${nombreEstudiante} ha presentado un total de ${numeroExamenes} ` +
-                `exámenes en la plataforma de evaluación en línea de nuestra institución, obteniendo ` +
-                `un promedio general de ${promedio}.`,
-                20, 140, { maxWidth: 170 }
-            );
-            pdf.text("Atentamente,", 20, 170);
-            pdf.text("El Instituto Tecnológico de Chilpancingo", 20, 180);
-
-            // Descargar PDF
+            pdf.text(`Promedio General: ${promedio}`, 20, 120);
             pdf.save("Constancia_de_Promedio.pdf");
-        };
-    };
-}
-
+        }
 
         window.mostrarPreguntas = mostrarPreguntas;
         window.verResultados = verResultados;
